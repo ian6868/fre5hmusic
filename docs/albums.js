@@ -18,58 +18,34 @@
 
 const albums = [
     {
-        name: 'I Probably Should Not Have Said That',
-        year: 2024,
-        images: ['./ALBUM.png', './2.png', './1.png'],
-        backgrounds: ['./bg.png', './bg.png'],
-        track_gradient_start: '#ff3000',
-        track_gradient_end: '#fee400',
-        track_hover_color: '#0000F6',
+        name: ' ',
+        year: 2023,
+        images: ['./1.jpg'],
+        backgrounds: ['./2.jpg', './2.jpg'],
+        track_gradient_start: '#324f75',
+        track_gradient_end: '#383b5e',
+        track_hover_color: '#2349A2',
         tracks_front: [
             {
-                name: 'A Marie',
-                path: './AMarie.ogg',
-                image: './AMarie.png',
+                name: 'Angelic Anguish',
+                path: "./angelicanguish.mp3",
+                image: './1.gif',
             }, {
-                name: 'Basement Song',
-                path: './BasementSong.ogg',
-                image: './BasementSong22.png',
-            }, {
-                name: 'Allo',
-                path: './Allo.ogg',
-                image: './Allo2.png',
-            }, {
-                name: 'Who Are We',
-                path: './WhoAreWe.ogg',
-                image: './WhoAreWe23.png',
-            }, {
-                name: 'Beaten Battered Shoreline',
-                path: './BeatenBatteredShoreline.ogg',
-                image: './BeatenBatteredShoreline3.png',
+                name: 'Catching Z\'s',
+                path: "./catchingzs.mp3",
+                image: './2.gif',
             }
         ],
         tracks_back: [
             {
-                name: 'Midnight',
-                path: './Midnight.ogg',
-                image: './mIDNIGHT2.png',
+                name: 'Halcyon',
+                path: "./halcyon.mp3",
+                image: './3.gif',
             }, {
-                name: 'Standing Undressed',
-                path: './StandingUndressed.ogg',
-                image: './StandingUndressed2.png',
-            }, {
-                name: 'Mommas Boy',
-                path: './MommasBoy.ogg',
-                image: './MommasBoy2.png',
-            }, {
-                name: 'Exhale',
-                path: './Exhale.ogg',
-                image: './exhales.png',
-            }, {
-                name: 'Those Three Words',
-                path: './ThoseThreeWords.ogg',
-                image: './ThoseThreeWords2.png',
-            }
+                name: 'Too Scared of the Future',
+                path: "./tooscared.mp3",
+                image: './4.gif',
+            },
         ]
 
     }
