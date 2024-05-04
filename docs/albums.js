@@ -27,9 +27,9 @@ const albums = [
         track_hover_color: '#0000F6',
         tracks_front: [
             {
-                name: 'Angelic Anguish',
-                path: "./angelicanguish.mp3",
-                image: './1.gif',
+                name: 'A Marie',
+                path: "./AMarie.ogg",
+                image: './AMarie.png',
             }, {
                 name: 'Catching Z\'s',
                 path: "./catchingzs.mp3",
