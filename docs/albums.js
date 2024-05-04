@@ -19,7 +19,7 @@
 const albums = [
     {
         name: ' ',
-        year: 2023,
+        year: 2024,
         images: ['./1.jpg'],
         backgrounds: ['./2.jpg', './2.jpg'],
         track_gradient_start: '#324f75',
