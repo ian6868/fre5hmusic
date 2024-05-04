@@ -34,18 +34,6 @@ const albums = [
                 name: 'Basement Song',
                 path: './BasementSong.mp3',
                 image: './BasementSong22.png',
-            }, {
-                name: 'Allo',
-                path: './Allo.mp3',
-                image: './Allo2.png',
-            }, {
-                name: 'Who Are We',
-                path: './WhoAreWe.mp3',
-                image: './WhoAreWe23.png',
-            }, {
-                name: 'Beaten Battered Shoreline',
-                path: './BeatenBatteredShoreline.mp3',
-                image: './BeatenBatteredShoreline3.png',
             }
         ],
         tracks_back: [
@@ -57,18 +45,6 @@ const albums = [
                 name: 'Standing Undressed',
                 path: './StandingUndressed.mp3',
                 image: './StandingUndressed2.png',
-            }, {
-                name: 'Mommas Boy',
-                path: './MommasBoy.mp3',
-                image: './MommasBoy2.png',
-            }, {
-                name: 'Exhale',
-                path: './Exhale.mp3',
-                image: './exhales.png',
-            }, {
-                name: 'Those Three Words',
-                path: './ThoseThreeWords.mp3',
-                image: './ThoseThreeWords2.png',
             }
         ]
 
