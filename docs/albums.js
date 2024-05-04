@@ -18,9 +18,9 @@
 
 const albums = [
     {
-        name: ' ',
+        name: 'I Probably Should Not Have Said That',
         year: 2024,
-        images: ['./ALBUM.png'],
+        images: ['./ALBUM.png', './2.png', './1.png'],
         backgrounds: ['./bg.png', './bg.png'],
         track_gradient_start: '#ff3000',
         track_gradient_end: '#fee400',
@@ -28,24 +28,48 @@ const albums = [
         tracks_front: [
             {
                 name: 'A Marie',
-                path: "./AMarie.ogg",
+                path: './AMarie.mp3',
                 image: './AMarie.png',
             }, {
-                name: 'Catching Z\'s',
-                path: "./catchingzs.mp3",
-                image: './2.gif',
+                name: 'Basement Song',
+                path: './BasementSong.mp3',
+                image: './BasementSong22.png',
+            }, {
+                name: 'Allo',
+                path: './Allo.mp3',
+                image: './Allo2.png',
+            }, {
+                name: 'Who Are We',
+                path: './WhoAreWe.mp3',
+                image: './WhoAreWe23.png',
+            }, {
+                name: 'Beaten Battered Shoreline',
+                path: './BeatenBatteredShoreline.mp3',
+                image: './BeatenBatteredShoreline3.png',
             }
         ],
         tracks_back: [
             {
-                name: 'Halcyon',
-                path: "./halcyon.mp3",
-                image: './3.gif',
+                name: 'Midnight',
+                path: './Midnight.mp3',
+                image: './mIDNIGHT2.png',
             }, {
-                name: 'Too Scared of the Future',
-                path: "./tooscared.mp3",
-                image: './4.gif',
-            },
+                name: 'Standing Undressed',
+                path: './StandingUndressed.mp3',
+                image: './StandingUndressed2.png',
+            }, {
+                name: 'Mommas Boy',
+                path: './MommasBoy.mp3',
+                image: './MommasBoy2.png',
+            }, {
+                name: 'Exhale',
+                path: './Exhale.mp3',
+                image: './exhales.png',
+            }, {
+                name: 'Those Three Words',
+                path: './ThoseThreeWords.mp3',
+                image: './ThoseThreeWords2.png',
+            }
         ]
 
     }
