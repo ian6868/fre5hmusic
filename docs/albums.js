@@ -20,11 +20,11 @@ const albums = [
     {
         name: ' ',
         year: 2024,
-        images: ['./1.jpg'],
-        backgrounds: ['./2.jpg', './2.jpg'],
-        track_gradient_start: '#324f75',
-        track_gradient_end: '#383b5e',
-        track_hover_color: '#2349A2',
+        images: ['./ALBUM.png'],
+        backgrounds: ['./bg.png', './bg.png'],
+        track_gradient_start: '#ff3000',
+        track_gradient_end: '#fee400',
+        track_hover_color: '#0000F6',
         tracks_front: [
             {
                 name: 'Angelic Anguish',
