@@ -20,7 +20,7 @@ const albums = [
     {
         name: 'I Probably Should Not Have Said That',
         year: 2024,
-        images: ['./ALBUM.png', './2.png'],
+        images: ['./ALBUMsm.png', './2sm.png', './1sm.png'],
         backgrounds: ['./bg.png'],
         track_gradient_start: '#ff3000',
         track_gradient_end: '#fee400',
@@ -29,11 +29,11 @@ const albums = [
             {
                 name: 'A Marie',
                 path: "./AMarie.mp3",
-                image: './AMarie.png',
+                image: './AMariesm.png',
             }, {
                 name: 'Basement Song',
                 path: "./BasementSong.mp3",
-                image: './BasementSong22.png',
+                image: './BasementSong22sm.png',
             }
         ],
         tracks_back: [
