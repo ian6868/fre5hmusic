@@ -21,7 +21,7 @@ const albums = [
         name: 'I Probably Should Not Have Said That',
         year: 2024,
         images: ['./ALBUMsm.png', './2sm.png', './1sm.png'],
-        backgrounds: ['./bg.png'],
+        backgrounds: ['./bgsm.png'],
         track_gradient_start: '#ff3000',
         track_gradient_end: '#fee400',
         track_hover_color: '#0000F6',
