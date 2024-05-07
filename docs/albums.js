@@ -34,19 +34,40 @@ const albums = [
                 name: 'Basement Song',
                 path: "./BasementSong.mp3",
                 image: './BasementSong22sm.png',
+            }, {
+                name: 'Allo',
+                path: './Allo.mp3',
+                image: './Allo2sm.png',
+            }, {
+                name: 'Who Are We',
+                path: './WhoAreWe.mp3',
+                image: './WhoAreWe23sm.png',
+            }, {
+                name: 'Beaten Battered Shoreline',
+                path: './BeatenBatteredShoreline.mp3',
+                image: './BeatenBatteredShoreline3sm.png',
             }
         ],
         tracks_back: [
             {
-                name: 'Halcyon',
-                path: "./halcyon.mp3",
-                image: './3.gif',
+                name: 'Midnight',
+                path: './Midnight.mp3',
+                image: './mIDNIGHT2sm.png',
             }, {
-                name: 'Too Scared of the Future',
-                path: "./tooscared.mp3",
-                image: './4.gif',
-            },
+                name: 'Standing Undressed',
+                path: './StandingUndressed.mp3',
+                image: './StandingUndressed2sm.png',
+            }, {
+                name: 'Mommas Boy',
+                path: './MommasBoy.mp3',
+                image: './MommasBoy2sm.png',
+            }, {
+                name: 'Exhale',
+                path: './Exhale.mp3',
+                image: './exhalessm.png',
+            }, {
+                name: 'Those Three Words',
+                path: './ThoseThreeWords.mp3',
+                image: './ThoseThreeWords2sm.png',
+            }
         ]
-
-    }
-]
