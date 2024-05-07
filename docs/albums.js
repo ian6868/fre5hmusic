@@ -19,7 +19,7 @@
 const albums = [
     {
         name: 'I Probably Should Not Have Said That',
-        year: 2024,
+        year: '2024',
         images: ['./ALBUMsm.png', './2sm.png', './1sm.png'],
         backgrounds: ['./bgsm.png'],
         track_gradient_start: '#ff3000',
