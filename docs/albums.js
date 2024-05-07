@@ -71,3 +71,6 @@ const albums = [
                 image: './ThoseThreeWords2sm.png',
             }
         ]
+            
+    }
+]
