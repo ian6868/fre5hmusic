@@ -11,10 +11,9 @@ let buttonBackground = false
 let customVinylImage = false // 'vinyl.png'
 
 // Player background gradient
-let playerGradientStart = '#000000'
-let playerMid = '#ff3000'
-let playerGradientStop = '#000000'
-let playerGradientDirection = 'vertical' // 'horizontal', 'vertical' or 'radial'
+let playerGradientStart = '#0EB5AA'
+let playerGradientStop = '#501E67'
+let playerGradientDirection = 'horizontal' // 'horizontal', 'vertical' or 'radial'
 
 let currentTrackHoverColor = '#2349A2'
 
@@ -683,7 +682,6 @@ const sketch = ( s ) => {
         }
 
         gradient.addColorStop(0, playerGradientStart);
-        gradient.addColorStop(0.5, playerMid);
         gradient.addColorStop(1, playerGradientStop);
         s.drawingContext.fillStyle = gradient;
     }

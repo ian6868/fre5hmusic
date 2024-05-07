@@ -4,8 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>F5 Player</title>
-    <link rel="icon" type="image/x-icon" href="./favicon.ico">
     <title>Vinyl Media Player</title>
     <script src="./albums.js"></script>
     <script src="./index.js"></script>
@@ -69,7 +67,6 @@
 
         .album-name {
             font-size: min(3rem, 10vmin);
-            display: none;
         }
 
         .album-desc {
@@ -82,7 +79,6 @@
             border: 1px solid;
             border-radius: 5px;
             padding: 0.25rem 0.5rem;
-            margin-top: 3%;
         }
 
         .album-id {
@@ -90,7 +86,6 @@
             font-size: min(3rem, 6vw);
             top: 0;
             right: 0;
-            margin-top: 3%;
         }
 
         svg {
@@ -137,7 +132,7 @@
 </head>
 <body>
     <!-- Background image -->
-    <img class="background-image" src="./bg.png" alt="background" />
+    <img class="background-image" src="./2.jpg" alt="background" />
 
     <!-- Outer Container -->
     <div class="outer-container">
@@ -150,7 +145,7 @@
                 <line x1="4" y1="5" x2="4" y2="19"></line>
             </svg>
             <!-- Central Image -->
-            <img class="cover-image" src="./ALBUM.png" alt="cover">
+            <img class="cover-image" src="./1.png" alt="cover">
             <!-- Next Button -->
             <svg id="btn-next" onclick="clickOnNext()" xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-player-skip-forward" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
@@ -167,7 +162,7 @@
                 <p class="album-name"></p>
                 <p class="album-desc"></p>
             </div>
-            <p class="album-decoration published-year">2024</p>
+            <p class="album-decoration published-year">2000</p>
             <p class="album-id"></p>
         </div>
     </div>
