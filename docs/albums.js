@@ -20,8 +20,8 @@ const albums = [
     {
         name: ' ',
         year: 2023,
-        images: ['./1.jpg'],
-        backgrounds: ['./2.jpg', './2.jpg'],
+        images: ['./ALBUM.png', './2.png', './1.png'],
+        backgrounds: ['./bg.png'],
         track_gradient_start: '#324f75',
         track_gradient_end: '#383b5e',
         track_hover_color: '#2349A2',
