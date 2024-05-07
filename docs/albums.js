@@ -34,18 +34,6 @@ const albums = [
                 name: 'Basement Song',
                 path: './BasementSong.mp3',
                 image: './BasementSong22.png',
-            }, {
-                name: 'Allo',
-                path: './Allo.mp3',
-                image: './Allo2.png',
-            }, {
-                name: 'Who Are We',
-                path: './WhoAreWe.mp3',
-                image: './WhoAreWe23.png',
-            }, {
-                name: 'Beaten Battered Shoreline',
-                path: './BeatenBatteredShoreline.mp3',
-                image: './BeatenBatteredShoreline3.png',
             }
         ],
         tracks_back: [
