@@ -18,22 +18,22 @@
 
 const albums = [
     {
-        name: ' ',
-        year: 2023,
+        name: 'I Probably Should Not Have Said That',
+        year: 2024,
         images: ['./ALBUM.png', './2.png', './1.png'],
         backgrounds: ['./bg.png'],
-        track_gradient_start: '#324f75',
-        track_gradient_end: '#383b5e',
-        track_hover_color: '#2349A2',
+        track_gradient_start: '#ff3000',
+        track_gradient_end: '#fee400',
+        track_hover_color: '#0000F6',
         tracks_front: [
             {
-                name: 'Angelic Anguish',
-                path: "./angelicanguish.mp3",
-                image: './1.gif',
+                name: 'A Marie',
+                path: "./AMarie.mp3",
+                image: './AMarie.png',
             }, {
-                name: 'Catching Z\'s',
-                path: "./catchingzs.mp3",
-                image: './2.gif',
+                name: 'Basement Song',
+                path: "./BasementSong.mp3",
+                image: './BasementSong22.png',
             }
         ],
         tracks_back: [
