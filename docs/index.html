@@ -474,20 +474,25 @@ setInterval(waveColorChange, colorChangeSpeed);
 
 //onclick refresh event
 let timer;
-document.getElementById("canvas").addEventListener('click', event => {
+const canvas = document.getElementById("canvas");
+
+canvas.addEventListener('click', event => {
   if (event.detail === 1) {
-  timer = setTimeout(() => {
-    location.reload();
-  }, 200)
+    timer = setTimeout(() => {
+      location.reload();
+    }, 200);
   }
 });
-document.getElementById("canvas").addEventListener('dblclick', event => {
+
+canvas.addEventListener('dblclick', event => {
+  clearTimeout(timer); // Clear the single-click timer
   let link = document.createElement('a');
-  let timestamp = new Date().toISOString().replace(/[-:.]/g,"").slice(0,15); // Remove unwanted characters and get the desired format
+  let timestamp = new Date().toISOString().replace(/[-:.]/g, "").slice(0, 15); // Remove unwanted characters and get the desired format
   link.download = `image_${timestamp}.png`;
   link.href = canvas.toDataURL();
   link.click();
-})
+});
+
 
 // Assign random colors and initialize cubes
 assignRandomColors();
