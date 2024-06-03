@@ -473,8 +473,6 @@ function colorIsDark(color) {
 setInterval(waveColorChange, colorChangeSpeed);
 
 //onclick refresh event
-let timer;
-
 canvas.addEventListener('click', event => {
   if (event.detail === 1) {
     timer = setTimeout(() => {
@@ -485,6 +483,7 @@ canvas.addEventListener('click', event => {
 
 canvas.addEventListener('dblclick', event => {
   clearTimeout(timer); // Clear the single-click timer
+  event.preventDefault(); // Prevent default action for the event
   let link = document.createElement('a');
   let timestamp = new Date().toISOString().replace(/[-:.]/g, "").slice(0, 15); // Remove unwanted characters and get the desired format
   link.download = `image_${timestamp}.png`;
