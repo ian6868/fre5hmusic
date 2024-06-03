@@ -481,15 +481,32 @@ canvas.addEventListener('click', event => {
   }
 });
 
-canvas.addEventListener('dblclick', event => {
-  clearTimeout(timer); // Clear the single-click timer
-  event.preventDefault(); // Prevent default action for the event
-  let link = document.createElement('a');
-  let timestamp = new Date().toISOString().replace(/[-:.]/g, "").slice(0, 15); // Remove unwanted characters and get the desired format
-  link.download = `image_${timestamp}.png`;
-  link.href = canvas.toDataURL();
-  link.click();
-});
+   canvas.addEventListener('dblclick', event => {
+     clearTimeout(timer);
+     // Create a link element
+     var link = document.createElement('a');
+
+     // Generate a unique identifier (UUID)
+     var uniqueId = generateUniqueId(); // You can use a function to generate a UUID
+
+     // Set the download filename with the unique identifier
+     link.download = `image_${uniqueId}.png`;
+
+     // Set the canvas data as the link's href
+     link.href = canvas.toDataURL('image/png');
+
+     // Simulate a click on the link to trigger the download
+     link.click();
+
+     // Function to generate a unique identifier (UUID)
+     function generateUniqueId() {
+       return 'xxx-xx-4-yxx-xx'.replace(/[xy]/g, function(c) {
+         var r = Math.random() * 16 | 0,
+             v = c == 'x' ? r : (r & 0x3 | 0x8);
+         return v.toString(16);
+       });
+     }
+   });
 
 
 // Assign random colors and initialize cubes
