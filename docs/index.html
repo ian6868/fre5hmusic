@@ -472,10 +472,22 @@ function colorIsDark(color) {
 // Call waveColorChange function at an interval
 setInterval(waveColorChange, colorChangeSpeed);
 
-// Event listener to reload page on canvas click
-document.querySelector("canvas").addEventListener("click", function () {
+//onclick refresh event
+let timer;
+document.getElementById("canvas").addEventListener('click', event => {
+  if (event.detail === 1) {
+  timer = setTimeout(() => {
     location.reload();
+  }, 200)
+  }
 });
+document.getElementById("canvas").addEventListener('dblclick', event => {
+  let link = document.createElement('a');
+  let timestamp = new Date().toISOString().replace(/[-:.]/g,"").slice(0,15); // Remove unwanted characters and get the desired format
+  link.download = `image_${timestamp}.png`;
+  link.href = canvas.toDataURL();
+  link.click();
+})
 
 // Assign random colors and initialize cubes
 assignRandomColors();
