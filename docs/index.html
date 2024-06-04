@@ -311,7 +311,7 @@ function waveColorChange() {
     }
 
     // Check if 15 seconds have passed
-    if (Date.now() - startTime >= 15000) {
+    if (Date.now() - startTime >= 17000) {
         if (!fading) {
             // Clear the canvas before starting the explosion
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -445,7 +445,7 @@ document.querySelector("canvas").addEventListener("click", function () {
 // Function to assign random colors
 function assignRandomColors() {
     colors = [];
-    const mainTextColor = `rgb(${Math.floor(Math.random() * 156) + 100}, ${Math.floor(Math.random() * 156) + 100}, ${Math.floor(Math.random() * 156) + 100})`;
+    const mainTextColor = `rgb(${Math.floor(Math.random() * 255) + 100}, ${Math.floor(Math.random() * 255) + 100}, ${Math.floor(Math.random() * 255) + 100})`;
     for (let i = 0; i < 10; i++) {
         colors.push(getRandomColor(mainTextColor));
     }
