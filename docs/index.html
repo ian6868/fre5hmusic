@@ -146,7 +146,7 @@ function getRandomColor(excludeColor) {
 function assignRandomColors() {
     colors = [];
     const mainTextColor = `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`;
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 10; i++) {
         colors.push(getRandomColor(mainTextColor));
     }
     colors.push(mainTextColor); // Ensuring the main text color is part of the colors array
@@ -446,7 +446,7 @@ document.querySelector("canvas").addEventListener("click", function () {
 function assignRandomColors() {
     colors = [];
     const mainTextColor = `rgb(${Math.floor(Math.random() * 156) + 100}, ${Math.floor(Math.random() * 156) + 100}, ${Math.floor(Math.random() * 156) + 100})`;
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 10; i++) {
         colors.push(getRandomColor(mainTextColor));
     }
     colors.push(mainTextColor); // Ensuring the main text color is part of the colors array
@@ -456,7 +456,7 @@ function assignRandomColors() {
 function getRandomColor(excludeColor) {
     let color;
     do {
-        color = `rgb(${Math.floor(Math.random() * 156) + 100}, ${Math.floor(Math.random() * 156) + 100}, ${Math.floor(Math.random() * 156) + 100})`;
+        color = `rgb(${Math.floor(Math.random() * 255) + 100}, ${Math.floor(Math.random() * 255) + 100}, ${Math.floor(Math.random() * 255) + 100})`;
     } while (color === excludeColor || colorIsDark(color));
     return color;
 }
