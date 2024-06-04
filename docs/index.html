@@ -138,14 +138,14 @@ class Cube {
 function getRandomColor(excludeColor) {
     let color;
     do {
-        color = `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`;
+        color = `rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`;
     } while (color === excludeColor);
     return color;
 }
 
 function assignRandomColors() {
     colors = [];
-    const mainTextColor = `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`;
+    const mainTextColor = `rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`;
     for (let i = 0; i < 10; i++) {
         colors.push(getRandomColor(mainTextColor));
     }
@@ -317,7 +317,7 @@ function waveColorChange() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             fadeToColor = true;
             fadeStartTime = Date.now();
-            nextColor = Math.floor(Math.random() * (colors.length - 1)); // Exclude the last color (black)
+            nextColor = Math.floor(Math.random() * (colors.length)); // Exclude the last color (black)
             fading = true;
             // Clear snake and reset visited status of all cubes
             snake = [];
@@ -361,7 +361,7 @@ function waveColorChange() {
  }
 
  // When the explosion ends, spread out all cubes evenly
- if (!fading && Date.now() - startTime >= 15000) {
+ if (!fading && Date.now() - startTime >= 17000) {
      const maxRadius = Math.min(canvas.width, canvas.height) / 2; // Max distance from center
      const center = { x: canvas.width / 2, y: canvas.height / 2 };
 
