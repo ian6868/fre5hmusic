@@ -163,10 +163,6 @@ function initCubes() {
         { x: -10, y: 10 },
     ];
 
-    // Draw the text in black
-    ctx.fillStyle = 'black';
-    ctx.fillText(text, startX, startY);
-
     // Cycle through the colors array to draw the text with different colors
     const mainTextColorIndex = colors.length - 1; // Last color is the main text color
     offsets.forEach((offset, index) => {
@@ -302,10 +298,9 @@ function waveColorChange() {
     // Check if 15 seconds have passed
     if (Date.now() - startTime >= 12000) {
         if (!fading) {
-            // Clear the canvas before starting the explosion
-            resetCanvas();
             fadeToColor = true;
             fadeStartTime = Date.now();
+            resetCanvas();
 
             // Ensure the next color is different from the last used color
             do {
@@ -440,7 +435,7 @@ function getRandomColor() {
 function assignRandomColors() {
     colors = [];
     const mainTextColor = `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`;
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 5; i++) {
         colors.push(getRandomColor());
     }
     colors.push(mainTextColor); // Ensuring the main text color is part of the colors array
@@ -507,15 +502,13 @@ function resetCanvas() {
     //initCubes();
 }
 
+// Call initCanvas initially to set up the canvas
+
+
+
 // Attach event listeners once after the initial setup
 attachCanvasEventListeners();
-
-// Ensure to call initCanvas after any reset or re-initialization
-setTimeout(() => {
-    // Reset or reinitialize your canvas here
-    resetCanvas(); // Reapply the black background
-}, 12000); // Adjust timing as per your requirement
-
+initCanvas()
 
 
 
