@@ -85,7 +85,7 @@ class Cube {
     draw() {
         ctx.fillStyle = colors[this.colorIndex];
         ctx.fillRect(this.x, this.y, this.size, this.size);
-        ctx.fillStyle = 'rgba(0,0,0,.7)';
+        ctx.fillStyle = 'rgba(0,0,0,.6)';
         ctx.fillRect(this.x + this.size * 0.1, this.y + this.size * 0.1, this.size, this.size);
     }
 
@@ -153,14 +153,14 @@ function initCubes() {
     // Draw the text multiple times with slight offsets to create a thicker appearance
     const offsets = [
         { x: 0, y: 0 },
-        { x: 20, y: 0 },
-        { x: -20, y: 0 },
-        { x: 0, y: 20 },
-        { x: 0, y: -20 },
-        { x: 10, y: 10 },
-        { x: -10, y: -10 },
-        { x: 10, y: -10 },
-        { x: -10, y: 10 },
+        { x: 15, y: 0 },
+        { x: -15, y: 0 },
+        { x: 0, y: 15 },
+        { x: 0, y: -15 },
+        { x: 7.5, y: 7.5 },
+        { x: -7.5, y: -7.5 },
+        { x: 7.5, y: -7.5 },
+        { x: -7.5, y: 7.5 },
     ];
 
     // Cycle through the colors array to draw the text with different colors
@@ -221,11 +221,6 @@ function animate() {
         cube.update();
         cube.draw();
     }
-
-    // Reduce the frame rate to 30 FPS to improve performance
-    setTimeout(() => {
-        requestAnimationFrame(animate);
-    }, 1000 / 30);
 }
 
 
@@ -296,7 +291,7 @@ function waveColorChange() {
     }
 
     // Check if 15 seconds have passed
-    if (Date.now() - startTime >= 12000) {
+    if (Date.now() - startTime >= 11000) {
         if (!fading) {
             fadeToColor = true;
             fadeStartTime = Date.now();
@@ -320,10 +315,14 @@ function waveColorChange() {
     }
 
     // If fading to single color
-    if (fadeToColor) {
-        const fadeDuration = 750; // 2 seconds to fade
-        const elapsedTime = Date.now() - fadeStartTime;
-        const alpha = Math.min(elapsedTime / fadeDuration, 1);
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+// If fading to single color
+if (fadeToColor) {
+    const fadeDuration = isIOS ? 750 : 300;
+    const elapsedTime = Date.now() - fadeStartTime;
+    const alpha = Math.min(elapsedTime / fadeDuration, 1);
+
 
         for (const cube of cubes) {
             cube.fadeToSingleColor(nextColor, alpha);
@@ -351,7 +350,7 @@ function waveColorChange() {
     }
 
     // When the explosion ends, spread out all cubes evenly
-    if (!fading && Date.now() - startTime >= 12000) {
+    if (!fading && Date.now() - startTime >= 11000) {
         const maxRadius = Math.min(canvas.width, canvas.height) / 2; // Max distance from center
         const center = { x: canvas.width / 2, y: canvas.height / 2 };
 
@@ -383,7 +382,8 @@ initCubes();
 
 // Now, you can gradually reduce the maxHoverOffset over time
 function updateCubes() {
- const fadeDuration = 750; // 5 seconds to fade
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const fadeDuration = isIOS ? 750 : 300;
     const elapsedTime = Date.now() - startTime;
     const alpha = Math.min(elapsedTime / fadeDuration, 1);
 
