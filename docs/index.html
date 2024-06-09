@@ -6,29 +6,64 @@
     <title>TOD</title>
     <style>
     body {
-            background-color: black;
-            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
         }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
         textarea {
-            color: black;
-            background-color: white; /* Ensure readability */
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 10px;
         }
+
         input[type="submit"] {
-            color: black;
-            background-color: white; /* Optional: To make the button visible against the black background */
+            padding: 10px 20px;
+            font-size: 16px;
         }
-        label, h1, h2, pre, div {
-            color: white;
+
+        #result {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 600px;
+            width: 100%;
         }
-        a {
-            color: blue;
+
+        pre, iframe, img {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        #preview img {
+            max-width: 100%;
+        }
+
+        iframe {
+            height: 300px;
         }
     </style>
 </head>
 <body>
     <h1>T.O.D</h1>
     <form id="jsonForm">
-        <label for="json_content">Enter JSON formatted text:</label><br>
+        <label for="json_content">Enter JSON formatted base64 encoded content:</label><br>
         <textarea id="json_content" name="json_content" rows="10" cols="50"></textarea><br>
         <input type="button" value="Submit" onclick="processJson(event)">
     </form>
@@ -42,85 +77,7 @@
     </div>
 
     <script>
-       function removeQuotes(line) {
-           line = line.trim().replace(/^"|"$/g, '');
-           return line.replace(/",$/, '');
-       }
-
-       function combineLines(lines) {
-           return lines.join('');
-       }
-
-       function removeWhitespace(line) {
-           return line.replace(/\s+/g, '');
-       }
-
-       function processJsonContent(content) {
-           let lines = content.split('\n').map(removeQuotes);
-           let combinedString = combineLines(lines);
-           lines = combinedString.split('\n').map(removeWhitespace);
-           return combineLines(lines);
-       }
-
-       function base64ToBlob(base64, type) {
-           let binary = atob(base64);
-           let len = binary.length;
-           let buffer = new Uint8Array(len);
-           for (let i = 0; i < len; i++) {
-               buffer[i] = binary.charCodeAt(i);
-           }
-           return new Blob([buffer], { type: type });
-       }
-
-       function saveFileFromBase64(content) {
-           let [metadata, base64Data] = content.split(';base64,');
-           let fileExtension = 'txt'; // Default to txt for simplicity
-
-           if (metadata.includes('image/png')) fileExtension = 'png';
-           else if (metadata.includes('image/jpeg')) fileExtension = 'jpg';
-           else if (metadata.includes('image/gif')) fileExtension = 'gif';
-           else if (metadata.includes('image/svg+xml')) fileExtension = 'svg';
-           else if (metadata.includes('image/webp')) fileExtension = 'webp';
-           else if (metadata.includes('text/html')) fileExtension = 'html';
-
-           return { base64Data, fileExtension, metadata };
-       }
-
-       function processJson(event) {
-           event.preventDefault();
-           let jsonContent = document.getElementById('json_content').value;
-           let processedContent = processJsonContent(jsonContent);
-
-           let processedElement = document.getElementById('processed_content');
-           processedElement.textContent = processedContent;
-
-           let { base64Data, fileExtension, metadata } = saveFileFromBase64(processedContent);
-           let blob = base64ToBlob(base64Data, metadata);
-           let downloadUrl = URL.createObjectURL(blob);
-
-           let downloadLink = document.getElementById('download_link');
-           downloadLink.href = downloadUrl;
-           downloadLink.download = `TOD_Decoded.${fileExtension}`;
-
-           let previewElement = document.getElementById('preview');
-           previewElement.innerHTML = ''; // Clear previous preview
-           if (metadata.includes('image/')) {
-               let img = document.createElement('img');
-               img.src = `data:${metadata};base64,${base64Data}`;
-               img.style.maxWidth = '100%';
-               previewElement.appendChild(img);
-           } else if (metadata.includes('text/html')) {
-               let iframe = document.createElement('iframe');
-               iframe.srcdoc = atob(base64Data);
-               iframe.style.width = '100%';
-               iframe.style.height = '300px';
-               previewElement.appendChild(iframe);
-           } else {
-               let pre = document.createElement('pre');
-               pre.textContent = atob(base64Data);
-               previewElement.appendChild(pre);
-           }
-       }
+      function removeQuotes(line){line=line.trim().replace(/^"|"$/g,"");return line.replace(/",$/,"")}function combineLines(lines){return lines.join("")}function removeWhitespace(line){return line.replace(/\s+/g,"")}function processJsonContent(content){let lines=content.split("\n").map(removeQuotes);let combinedString=combineLines(lines);lines=combinedString.split("\n").map(removeWhitespace);return combineLines(lines)}function base64ToBlob(base64,type){let binary=atob(base64);let len=binary.length;let buffer=new Uint8Array(len);for(let i=0;i<len;i++){buffer[i]=binary.charCodeAt(i)}return new Blob([buffer],{type:type})}function saveFileFromBase64(content){let[metadata,base64Data]=content.split(";base64,");let fileExtension="txt";if(metadata.includes("image/png"))fileExtension="png";else if(metadata.includes("image/jpeg"))fileExtension="jpg";else if(metadata.includes("image/gif"))fileExtension="gif";else if(metadata.includes("image/svg+xml"))fileExtension="svg";else if(metadata.includes("image/webp"))fileExtension="webp";else if(metadata.includes("text/html"))fileExtension="html";return{base64Data:base64Data,fileExtension:fileExtension,metadata:metadata}}function processJson(event){event.preventDefault();let jsonContent=document.getElementById("json_content").value;let processedContent=processJsonContent(jsonContent);let processedElement=document.getElementById("processed_content");processedElement.textContent=processedContent;let{base64Data,fileExtension,metadata}=saveFileFromBase64(processedContent);let blob=base64ToBlob(base64Data,metadata);let downloadUrl=URL.createObjectURL(blob);let downloadLink=document.getElementById("download_link");downloadLink.href=downloadUrl;downloadLink.download=`TOD_Decoded.${fileExtension}`;let previewElement=document.getElementById("preview");previewElement.innerHTML="";if(metadata.includes("image/")){let img=document.createElement("img");img.src=`data:${metadata};base64,${base64Data}`;img.style.maxWidth="100%";previewElement.appendChild(img)}else if(metadata.includes("text/html")){let iframe=document.createElement("iframe");iframe.srcdoc=atob(base64Data);iframe.style.width="100%";iframe.style.height="300px";previewElement.appendChild(iframe)}else{let pre=document.createElement("pre");pre.textContent=atob(base64Data);previewElement.appendChild(pre)}}
    </script>
 </body>
 </html>
