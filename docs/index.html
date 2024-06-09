@@ -14,7 +14,7 @@
     </form>
     <div id="result">
         <h2>Download Link:</h2>
-        <a id="download_link" href="#" download="processed_file.txt">Download Processed File</a>
+        <a id="download_link" href="#" download="TOD_Decoded.txt">Download Processed File</a>
         <h2>Processed Content:</h2>
         <pre id="processed_content"></pre>
         <h2>Preview:</h2>
@@ -70,7 +70,7 @@
 
             let downloadLink = document.getElementById('download_link');
             downloadLink.href = downloadUrl;
-            downloadLink.download = `processed_file.${fileExtension}`;
+            downloadLink.download = `TOD_Decoded.${fileExtension}`;
 
             let previewElement = document.getElementById('preview');
             previewElement.innerHTML = ''; // Clear previous preview
