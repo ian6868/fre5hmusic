@@ -1,83 +1,525 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TOD</title>
-    <style>
-    body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-        }
-
-        h1 {
-            margin-bottom: 20px;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        textarea {
-            width: 100%;
-            max-width: 600px;
-            margin-bottom: 10px;
-        }
-
-        input[type="submit"] {
-            padding: 10px 20px;
-            font-size: 16px;
-        }
-
-        #result {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            max-width: 600px;
-            width: 100%;
-        }
-
-        pre, iframe, img {
-            width: 100%;
-            max-width: 100%;
-        }
-
-        #preview img {
-            max-width: 100%;
-        }
-
-        iframe {
-            height: 300px;
-        }
-    </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <style>
+      body {
+          margin: 0;
+          overflow: hidden;
+          background-color: #000000;
+      }
+      canvas {
+          display: block;
+      }
+  </style>
 </head>
 <body>
-    <h1>T.O.D</h1>
-    <form id="jsonForm">
-        <label for="json_content">Enter JSON formatted base64 encoded content:</label><br>
-        <textarea id="json_content" name="json_content" rows="10" cols="50"></textarea><br>
-        <input type="button" value="Submit" onclick="processJson(event)">
-    </form>
-    <div id="result">
-        <h2>Download Link:</h2>
-        <a id="download_link" href="#" download="TOD_Decoded.txt">Download Processed File</a>
-        <h2>Processed Content:</h2>
-        <pre id="processed_content"></pre>
-        <h2>Preview:</h2>
-        <div id="preview"></div>
-    </div>
 
-    <script>
-      function removeQuotes(line){line=line.trim().replace(/^"|"$/g,"");return line.replace(/",$/,"")}function combineLines(lines){return lines.join("")}function removeWhitespace(line){return line.replace(/\s+/g,"")}function processJsonContent(content){let lines=content.split("\n").map(removeQuotes);let combinedString=combineLines(lines);lines=combinedString.split("\n").map(removeWhitespace);return combineLines(lines)}function base64ToBlob(base64,type){let binary=atob(base64);let len=binary.length;let buffer=new Uint8Array(len);for(let i=0;i<len;i++){buffer[i]=binary.charCodeAt(i)}return new Blob([buffer],{type:type})}function saveFileFromBase64(content){let[metadata,base64Data]=content.split(";base64,");let fileExtension="txt";if(metadata.includes("image/png"))fileExtension="png";else if(metadata.includes("image/jpeg"))fileExtension="jpg";else if(metadata.includes("image/gif"))fileExtension="gif";else if(metadata.includes("image/svg+xml"))fileExtension="svg";else if(metadata.includes("image/webp"))fileExtension="webp";else if(metadata.includes("text/html"))fileExtension="html";return{base64Data:base64Data,fileExtension:fileExtension,metadata:metadata}}function processJson(event){event.preventDefault();let jsonContent=document.getElementById("json_content").value;let processedContent=processJsonContent(jsonContent);let processedElement=document.getElementById("processed_content");processedElement.textContent=processedContent;let{base64Data,fileExtension,metadata}=saveFileFromBase64(processedContent);let blob=base64ToBlob(base64Data,metadata);let downloadUrl=URL.createObjectURL(blob);let downloadLink=document.getElementById("download_link");downloadLink.href=downloadUrl;downloadLink.download=`TOD_Decoded.${fileExtension}`;let previewElement=document.getElementById("preview");previewElement.innerHTML="";if(metadata.includes("image/")){let img=document.createElement("img");img.src=`data:${metadata};base64,${base64Data}`;img.style.maxWidth="100%";previewElement.appendChild(img)}else if(metadata.includes("text/html")){let iframe=document.createElement("iframe");iframe.srcdoc=atob(base64Data);iframe.style.width="100%";iframe.style.height="300px";previewElement.appendChild(iframe)}else{let pre=document.createElement("pre");pre.textContent=atob(base64Data);previewElement.appendChild(pre)}}
-   </script>
+  <canvas id="canvas" style="object-fit: contain; width: 100vw; height: 100vh;"></canvas>
+
+  <script>
+/*Release canvas from memory*/
+function releaseCanvas(canvas) {
+canvas.width = 1;
+canvas.style.width = "1vw";
+canvas.height = 1;
+canvas.style.height = "1vh";
+const ctx = canvas.getContext('2d');
+ctx && ctx.clearRect(0, 0, 1, 1);
+canvas.remove();
+}
+
+//initialize canvas
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+// Set canvas dimensions
+canvas.width = 3840;
+canvas.height = 2160;
+
+ctx.fillStyle = 'black';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+//variables
+let startTime = Date.now();
+let fadeToColor = false;
+let fading = false;
+const text = "ADA whale";
+const fontSize = 640;
+const cubeSize = 20;
+const cubes = [];
+let colorChangeSpeed;
+let isAndroid = /Android/i.test(navigator.userAgent);
+let isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+let colors = [];
+let snake = [];
+
+//Set speed for devices
+if (isAndroid) {
+    // Adjust color change speed for Android
+    colorChangeSpeed = 0.0001; // speed in milliseconds
+} else if (isIOS) {
+    // Adjust color change speed for iOS
+    colorChangeSpeed = 100; // speed in milliseconds
+} else {
+    // Default color change speed
+    colorChangeSpeed = 0.0001; // speed in milliseconds
+}
+
+//Cube set up
+class Cube {
+    constructor(x, y, targetX, targetY, maxHoverOffset) {
+        this.x = x;
+        this.y = y;
+        this.targetX = targetX;
+        this.targetY = targetY;
+        this.colorIndex = 0; // Start with the initial color
+        this.size = cubeSize;
+        this.neighbors = [];
+        this.visited = false; // Track if the cube has been visited
+        this.hoverOffsetX = (Math.random() - 0.5) * maxHoverOffset;
+        this.hoverOffsetY = (Math.random() - 0.5) * maxHoverOffset;
+        this.maxHoverOffset = maxHoverOffset; // Initial max hover offset
+    }
+
+    draw() {
+        ctx.fillStyle = colors[this.colorIndex];
+        ctx.fillRect(this.x, this.y, this.size, this.size);
+        ctx.fillStyle = 'rgba(0,0,0,.6)';
+        ctx.fillRect(this.x + this.size * 0.1, this.y + this.size * 0.1, this.size, this.size);
+    }
+
+    update() {
+        const speed = 0.05; // Adjust this value to change the speed of cube movement
+        const hoverDistance = 5; // Distance to hover around the target position
+
+        // Apply random hover offset
+        if (Math.random() < 0.1) { // Update hover offset randomly
+            this.hoverOffsetX = (Math.random() - 0.5) * this.maxHoverOffset;
+            this.hoverOffsetY = (Math.random() - 0.5) * this.maxHoverOffset;
+        }
+
+        const targetX = this.targetX + this.hoverOffsetX;
+        const targetY = this.targetY + this.hoverOffsetY;
+        const deltaX = targetX - this.x;
+        const deltaY = targetY - this.y;
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+        if (distance > hoverDistance) {
+            this.x += (deltaX / distance) * speed * distance;
+            this.y += (deltaY / distance) * speed * distance;
+        }
+    }
+
+    changeColor() {
+        this.colorIndex = (this.colorIndex + 1) % colors.length;
+    }
+
+    fadeToSingleColor(targetColorIndex, alpha) {
+        const currentRGB = colors[this.colorIndex].match(/\d+/g).map(Number);
+        const targetRGB = colors[targetColorIndex].match(/\d+/g).map(Number);
+
+        const newRGB = currentRGB.map((c, i) => {
+            return Math.floor(c + (targetRGB[i] - c) * alpha);
+        });
+
+        this.colorIndex = colors.findIndex(
+            color =>
+                color === `rgb(${newRGB[0]}, ${newRGB[1]}, ${newRGB[2]})`
+        );
+
+        if (this.colorIndex === -1) {
+            colors.push(`rgb(${newRGB[0]}, ${newRGB[1]}, ${newRGB[2]})`);
+            this.colorIndex = colors.length - 1;
+        }
+    }
+}
+
+function initCubes() {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+
+    ctx.font = `${fontSize}px Arial`;
+    const textWidth = ctx.measureText(text).width;
+    const textHeight = fontSize; // Since we're using a fixed font size
+
+    // Calculate the position to start drawing the text so that it is centered
+    const startX = (canvas.width - textWidth) / 2;
+    const startY = (canvas.height + textHeight) / 2.2;
+
+    let isAndroid = /Android/i.test(navigator.userAgent);
+    let isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    // Draw the text multiple times with slight offsets to create a thicker appearance
+    const offsets = [
+        { x: 0, y: 0 },
+        { x: 15, y: 0 },
+        { x: -15, y: 0 },
+        { x: 0, y: 15 },
+        { x: 0, y: -15 },
+        { x: 7.5, y: 7.5 },
+        { x: -7.5, y: -7.5 },
+        { x: 7.5, y: -7.5 },
+        { x: -7.5, y: 7.5 },
+    ];
+
+    // Cycle through the colors array to draw the text with different colors
+    const mainTextColorIndex = colors.length - 1; // Last color is the main text color
+    offsets.forEach((offset, index) => {
+        ctx.fillStyle = colors[mainTextColorIndex];
+        ctx.fillText(text, startX + offset.x, startY + offset.y);
+    });
+
+    const textData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+
+    // Initialize cubes around the text
+    for (let y = 0; y < canvas.height; y += cubeSize) {
+        for (let x = 0; x < canvas.width; x += cubeSize) {
+            const index = (y * canvas.width + x) * 4;
+            if (textData[index + 3] > 128) {
+    let maxHoverOffset;
+    if (isAndroid) {
+        // Adjust maxHoverOffset based on fade progress for Android
+        maxHoverOffset = 3000;
+    } else if (isIOS) {
+        // Adjust maxHoverOffset based on fade progress for iOS
+        maxHoverOffset = 2000;
+    } else {
+        // Default maxHoverOffset value
+        maxHoverOffset = 3000;
+    }
+
+    const cube = new Cube(
+        x,
+        y,
+        x,
+        y,
+        maxHoverOffset
+    );
+
+    cubes.push(cube);
+}
+
+        }
+    }
+
+    // Find neighbors
+    for (let i = 0; i < cubes.length; i++) {
+        const cube = cubes[i];
+        cube.neighbors = cubes.filter(other =>
+            other !== cube &&
+            Math.abs(other.targetX - cube.targetX) <= cubeSize &&
+            Math.abs(other.targetY - cube.targetY) <= cubeSize
+        );
+    }
+}
+
+function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+
+    for (const cube of cubes) {
+        cube.update();
+        cube.draw();
+    }
+}
+
+
+// Add a variable to store the last used color
+let lastColorIndex = -1;
+
+// Modify the waveColorChange function to avoid back-to-back same color
+function waveColorChange() {
+    const snakeSize = 20; // Number of cubes in the snake
+
+    if (!fading) {
+        if (snake.length === 0) {
+            // Initialize the snake with a random starting point around a random cube
+            const randomCube = cubes[Math.floor(Math.random() * cubes.length)];
+            snake.push(randomCube);
+            randomCube.visited = true; // Mark the starting cube as visited
+        }
+
+        // Move each cube in the snake randomly to a neighboring cube
+        for (let i = 0; i < snake.length; i++) {
+            const cube = snake[i];
+            cube.changeColor();
+
+            // Select a random neighboring cube
+            const neighbors = cube.neighbors.filter(neighbor => !neighbor.visited);
+            if (neighbors.length > 0) {
+                const nextCube = neighbors[Math.floor(Math.random() * neighbors.length)];
+                snake[i] = nextCube;
+                nextCube.visited = true; // Mark the cube as visited
+            } else {
+                // No unvisited neighbors, backtrack to a previous cube
+                snake.splice(i, 1);
+                i--; // Correct index due to removal
+            }
+        }
+
+        // Ensure the snake retains its length
+        while (snake.length < snakeSize) {
+            const lastCube = snake[snake.length - 1];
+            let nextCube;
+
+            // Look for neighboring cubes within a certain distance
+            const potentialNeighbors = lastCube.neighbors.filter(cube => !cube.visited);
+
+            if (potentialNeighbors.length > 0) {
+                // If there are potential neighbors, randomly select one
+                nextCube = potentialNeighbors[Math.floor(Math.random() * potentialNeighbors.length)];
+            } else {
+                // If no available neighbor within close proximity, randomly select any neighbor
+                nextCube = lastCube.neighbors[Math.floor(Math.random() * lastCube.neighbors.length)];
+            }
+
+            if (nextCube) {
+                snake.push(nextCube);
+                nextCube.visited = true;
+            } else {
+                // If no nextCube found, break out to prevent infinite loop
+                break;
+            }
+        }
+
+        // If the snake fails to move, reset it
+        if (snake.length === 0) {
+            const randomCube = cubes[Math.floor(Math.random() * cubes.length)];
+            snake.push(randomCube);
+            randomCube.visited = true;
+        }
+    }
+
+    // Check if 15 seconds have passed
+    if (Date.now() - startTime >= 11000) {
+        if (!fading) {
+            fadeToColor = true;
+            fadeStartTime = Date.now();
+            resetCanvas();
+
+            // Ensure the next color is different from the last used color
+            do {
+                nextColor = Math.floor(Math.random() * (colors.length - 1)); // Exclude the last color (black)
+            } while (nextColor === lastColorIndex);
+
+            lastColorIndex = nextColor; // Update the last used color
+
+            fading = true;
+            // Clear snake and reset visited status of all cubes
+            snake = [];
+            cubes.forEach(cube => {
+                cube.visited = false;
+                cube.colorIndex = nextColor; // Apply the new color
+            });
+        }
+    }
+
+    // If fading to single color
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+// If fading to single color
+if (fadeToColor) {
+    const fadeDuration = isIOS ? 750 : 300;
+    const elapsedTime = Date.now() - fadeStartTime;
+    const alpha = Math.min(elapsedTime / fadeDuration, 1);
+
+
+        for (const cube of cubes) {
+            cube.fadeToSingleColor(nextColor, alpha);
+
+            let isAndroid = /Android/i.test(navigator.userAgent);
+            let isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+            if (isAndroid) {
+                // Adjust maxHoverOffset based on fade progress for Android
+                cube.maxHoverOffset = 3000 - (2970 * alpha);
+            } else if (isIOS) {
+                // Adjust maxHoverOffset based on fade progress for iOS
+                cube.maxHoverOffset = 2000 - (1970 * alpha);
+            } else {
+                // Default adjustment if neither Android nor iOS
+                cube.maxHoverOffset = 3000 - (2970 * alpha);
+            }
+        }
+
+        if (elapsedTime >= fadeDuration) {
+            fadeToColor = false;
+            fading = false;
+            startTime = Date.now(); // Restart the snake process
+        }
+    }
+
+    // When the explosion ends, spread out all cubes evenly
+    if (!fading && Date.now() - startTime >= 11000) {
+        const maxRadius = Math.min(canvas.width, canvas.height) / 2; // Max distance from center
+        const center = { x: canvas.width / 2, y: canvas.height / 2 };
+
+        // Move each cube away from the center
+        for (const cube of cubes) {
+            const deltaX = cube.x - center.x;
+            const deltaY = cube.y - center.y;
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            const angle = Math.atan2(deltaY, deltaX);
+
+            const targetX = center.x + Math.cos(angle) * maxRadius;
+            const targetY = center.y + Math.sin(angle) * maxRadius;
+
+            // Smoothly move cubes to their target positions
+            cube.targetX = targetX;
+            cube.targetY = targetY;
+            cube.colorIndex = Math.floor(Math.random() * (colors.length - 1)); // Random color index (excluding black)
+        }
+    }
+}
+
+
+// Clear the canvas with a black background
+ctx.fillStyle = 'black';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+// Call initCubes() to initialize cubes
+initCubes();
+
+// Now, you can gradually reduce the maxHoverOffset over time
+function updateCubes() {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const fadeDuration = isIOS ? 750 : 300;
+    const elapsedTime = Date.now() - startTime;
+    const alpha = Math.min(elapsedTime / fadeDuration, 1);
+
+    for (const cube of cubes) {
+
+      let isAndroid = /Android/i.test(navigator.userAgent);
+      let isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+      if (isAndroid) {
+      // Adjust maxHoverOffset based on fade progress for Android
+      cube.maxHoverOffset = 3000 - (2970 * alpha);
+  } else if (isIOS) {
+      // Adjust maxHoverOffset based on fade progress for iOS
+      cube.maxHoverOffset = 2000 - (1970 * alpha);
+  } else {
+      // Default adjustment if neither Android nor iOS
+      cube.maxHoverOffset = 3000 - (2970 * alpha);
+  }
+    }
+
+    // Call updateCubes repeatedly until the fading is complete
+    if (elapsedTime < fadeDuration) {
+        requestAnimationFrame(updateCubes);
+    }
+}
+
+// Call updateCubes() after initialization to gradually reduce maxHoverOffset
+updateCubes();
+
+// Function to animate cubes
+function animate() {
+    for (const cube of cubes) {
+        cube.update();
+        cube.draw();
+    }
+    animationId = requestAnimationFrame(animate);
+}
+
+// Start animation
+initCanvas();
+animate();
+
+
+// First update: Remove color restrictions with dark colors and exclude colors
+function getRandomColor() {
+    return `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`;
+}
+
+function assignRandomColors() {
+    colors = [];
+    const mainTextColor = `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`;
+    for (let i = 0; i < 5; i++) {
+        colors.push(getRandomColor());
+    }
+    colors.push(mainTextColor); // Ensuring the main text color is part of the colors array
+}
+
+
+// Call waveColorChange function at an interval
+setInterval(waveColorChange, colorChangeSpeed);
+
+
+// Assign random colors and initialize cubes
+assignRandomColors();
+initCubes();
+animationId = requestAnimationFrame(animate);
+
+
+
+let singleClickTimer;
+
+// Function to generate a unique identifier (UUID)
+function generateUniqueId() {
+    return 'xxx-xx-4-yxx-xx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0,
+            v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+// Attach event listeners to the canvas
+function attachCanvasEventListeners() {
+    const canvas = document.getElementById("canvas");
+    let singleClickTimer;
+
+    canvas.addEventListener('click', event => {
+        if (event.detail === 1) {
+            singleClickTimer = setTimeout(() => {
+                location.reload();
+            }, 200);
+        }
+    });
+
+    canvas.addEventListener('dblclick', event => {
+        clearTimeout(singleClickTimer); // Clear the single-click timer
+        event.preventDefault(); // Prevent default action for the event
+        let link = document.createElement('a');
+        let uniqueId = generateUniqueId();
+        link.download = `image_${uniqueId}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    });
+}
+
+// Initialize the canvas and attach event listeners once
+function initCanvas() {
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+// Function to clear and reset the canvas with a black background
+function resetCanvas() {
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Reinitialize cubes
+    //initCubes();
+}
+
+// Call initCanvas initially to set up the canvas
+
+
+
+// Attach event listeners once after the initial setup
+attachCanvasEventListeners();
+initCanvas()
+
+
+
+/*Run release even when they refresh not with click (F5, refresh button, closing page)*/
+      window.addEventListener('pagehide', (event) => {
+      /*Release every canvas*/
+      var canvases = document.getElementsByTagName("canvas");
+      var canvasesList = Array.prototype.slice.call(canvases);
+            canvasesList.forEach(releaseCanvas);
+      });
+
+</script>
 </body>
 </html>
