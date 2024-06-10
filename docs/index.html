@@ -60,7 +60,7 @@ if (isAndroid) {
     colorChangeSpeed = 0.0001; // speed in milliseconds
 } else if (isIOS) {
     // Adjust color change speed for iOS
-    colorChangeSpeed = 100; // speed in milliseconds
+    colorChangeSpeed = 50; // speed in milliseconds
 } else {
     // Default color change speed
     colorChangeSpeed = 0.0001; // speed in milliseconds
@@ -90,7 +90,8 @@ class Cube {
     }
 
     update() {
-        const speed = 0.05; // Adjust this value to change the speed of cube movement
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;        
+        const speed = isIOS ? .05 : .045; // Adjust this value to change the speed of cube movement
         const hoverDistance = 5; // Distance to hover around the target position
 
         // Apply random hover offset
@@ -291,7 +292,7 @@ function waveColorChange() {
     }
 
     // Check if 15 seconds have passed
-    if (Date.now() - startTime >= 11000) {
+    if (Date.now() - startTime >= 10000) {
         if (!fading) {
             fadeToColor = true;
             fadeStartTime = Date.now();
@@ -319,7 +320,7 @@ function waveColorChange() {
 
 // If fading to single color
 if (fadeToColor) {
-    const fadeDuration = isIOS ? 750 : 300;
+    const fadeDuration = isIOS ? 750 : 600;
     const elapsedTime = Date.now() - fadeStartTime;
     const alpha = Math.min(elapsedTime / fadeDuration, 1);
 
@@ -332,13 +333,13 @@ if (fadeToColor) {
 
             if (isAndroid) {
                 // Adjust maxHoverOffset based on fade progress for Android
-                cube.maxHoverOffset = 3000 - (2970 * alpha);
+                cube.maxHoverOffset = 3000 - (2980 * alpha);
             } else if (isIOS) {
                 // Adjust maxHoverOffset based on fade progress for iOS
-                cube.maxHoverOffset = 2000 - (1970 * alpha);
+                cube.maxHoverOffset = 2000 - (1980 * alpha);
             } else {
                 // Default adjustment if neither Android nor iOS
-                cube.maxHoverOffset = 3000 - (2970 * alpha);
+                cube.maxHoverOffset = 3000 - (2980 * alpha);
             }
         }
 
@@ -350,7 +351,7 @@ if (fadeToColor) {
     }
 
     // When the explosion ends, spread out all cubes evenly
-    if (!fading && Date.now() - startTime >= 11000) {
+    if (!fading && Date.now() - startTime >= 10000) {
         const maxRadius = Math.min(canvas.width, canvas.height) / 2; // Max distance from center
         const center = { x: canvas.width / 2, y: canvas.height / 2 };
 
@@ -383,7 +384,7 @@ initCubes();
 // Now, you can gradually reduce the maxHoverOffset over time
 function updateCubes() {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const fadeDuration = isIOS ? 750 : 300;
+    const fadeDuration = isIOS ? 750 : 600;
     const elapsedTime = Date.now() - startTime;
     const alpha = Math.min(elapsedTime / fadeDuration, 1);
 
@@ -394,13 +395,13 @@ function updateCubes() {
 
       if (isAndroid) {
       // Adjust maxHoverOffset based on fade progress for Android
-      cube.maxHoverOffset = 3000 - (2970 * alpha);
+      cube.maxHoverOffset = 3000 - (2980 * alpha);
   } else if (isIOS) {
       // Adjust maxHoverOffset based on fade progress for iOS
-      cube.maxHoverOffset = 2000 - (1970 * alpha);
+      cube.maxHoverOffset = 2000 - (1980 * alpha);
   } else {
       // Default adjustment if neither Android nor iOS
-      cube.maxHoverOffset = 3000 - (2970 * alpha);
+      cube.maxHoverOffset = 3000 - (2980 * alpha);
   }
     }
 
