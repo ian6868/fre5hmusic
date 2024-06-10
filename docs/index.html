@@ -14,7 +14,7 @@
       }
   </style>
 </head>
-<body>
+<body id="bdy">
 
   <canvas id="canvas" style="object-fit: contain; width: 100vw; height: 100vh;"></canvas>
 
@@ -469,7 +469,7 @@ function generateUniqueId() {
     //const canvas = document.getElementById("canvas");
  
 
-    canvas.addEventListener('click', event => {
+    bdy.addEventListener('click', event => {
         if (event.detail === 1) {
             singleClickTimer = setTimeout(() => {
                 location.reload();
@@ -477,7 +477,7 @@ function generateUniqueId() {
         }
     });
 
-    canvas.addEventListener('dblclick', event => {
+    bdy.addEventListener('dblclick', event => {
         clearTimeout(singleClickTimer); // Clear the single-click timer
         //event.preventDefault(); // Prevent default action for the event
         let link = document.createElement('a');
