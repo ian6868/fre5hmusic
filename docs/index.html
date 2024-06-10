@@ -91,7 +91,7 @@ class Cube {
 
     update() {
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;        
-        const speed = isIOS ? .06 : .045; // Adjust this value to change the speed of cube movement
+        const speed = isIOS ? .075 : .045; // Adjust this value to change the speed of cube movement
         const hoverDistance = 5; // Distance to hover around the target position
 
         // Apply random hover offset
@@ -292,7 +292,7 @@ function waveColorChange() {
     }
 
     // Check if 15 seconds have passed
-    if (Date.now() - startTime >= 11000) {
+    if (Date.now() - startTime >= 12000) {
         if (!fading) {
             fadeToColor = true;
             fadeStartTime = Date.now();
@@ -320,7 +320,7 @@ function waveColorChange() {
 
 // If fading to single color
 if (fadeToColor) {
-    const fadeDuration = isIOS ? 750 : 600;
+    const fadeDuration = isIOS ? 600 : 500;
     const elapsedTime = Date.now() - fadeStartTime;
     const alpha = Math.min(elapsedTime / fadeDuration, 1);
 
@@ -351,7 +351,7 @@ if (fadeToColor) {
     }
 
     // When the explosion ends, spread out all cubes evenly
-    if (!fading && Date.now() - startTime >= 11000) {
+    if (!fading && Date.now() - startTime >= 12000) {
         const maxRadius = Math.min(canvas.width, canvas.height) / 2; // Max distance from center
         const center = { x: canvas.width / 2, y: canvas.height / 2 };
 
@@ -384,7 +384,7 @@ initCubes();
 // Now, you can gradually reduce the maxHoverOffset over time
 function updateCubes() {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const fadeDuration = isIOS ? 750 : 600;
+    const fadeDuration = isIOS ? 600 : 500;
     const elapsedTime = Date.now() - startTime;
     const alpha = Math.min(elapsedTime / fadeDuration, 1);
 
