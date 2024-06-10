@@ -60,7 +60,7 @@ if (isAndroid) {
     colorChangeSpeed = 0.0001; // speed in milliseconds
 } else if (isIOS) {
     // Adjust color change speed for iOS
-    colorChangeSpeed = 50; // speed in milliseconds
+    colorChangeSpeed = 25; // speed in milliseconds
 } else {
     // Default color change speed
     colorChangeSpeed = 0.0001; // speed in milliseconds
@@ -465,7 +465,7 @@ function generateUniqueId() {
 }
 
 // Attach event listeners to the canvas
-function attachCanvasEventListeners() {
+//function attachCanvasEventListeners() {
     const canvas = document.getElementById("canvas");
     let singleClickTimer;
 
@@ -486,7 +486,7 @@ function attachCanvasEventListeners() {
         link.href = canvas.toDataURL('image/png');
         link.click();
     });
-}
+//}
 
 // Initialize the canvas and attach event listeners once
 function initCanvas() {
@@ -507,7 +507,7 @@ function resetCanvas() {
 
 
 // Attach event listeners once after the initial setup
-attachCanvasEventListeners();
+//attachCanvasEventListeners();
 initCanvas()
 
 
