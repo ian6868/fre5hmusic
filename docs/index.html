@@ -60,7 +60,7 @@ if (isAndroid) {
     colorChangeSpeed = 0.0001; // speed in milliseconds
 } else if (isIOS) {
     // Adjust color change speed for iOS
-    colorChangeSpeed = 100; // speed in milliseconds
+    colorChangeSpeed = 50; // speed in milliseconds
 } else {
     // Default color change speed
     colorChangeSpeed = 0.0001; // speed in milliseconds
@@ -479,7 +479,7 @@ function attachCanvasEventListeners() {
 
     canvas.addEventListener('dblclick', event => {
         clearTimeout(singleClickTimer); // Clear the single-click timer
-        event.preventDefault(); // Prevent default action for the event
+        //event.preventDefault(); // Prevent default action for the event
         let link = document.createElement('a');
         let uniqueId = generateUniqueId();
         link.download = `image_${uniqueId}.png`;
