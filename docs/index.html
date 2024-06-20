@@ -1,526 +1,208 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta charset="UTF-8">
-  <style>
-      body {
-          margin: 0;
-          overflow: hidden;
-          background-color: #000000;
-      }
-      canvas {
-          display: block;
-      }
-  </style>
+    <meta charset="UTF-8">
+    <title>WebRTC Chat App</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; }
+        .container { margin-top: 20px; }
+        .button { padding: 10px 20px; margin: 10px; cursor: pointer; }
+        .hidden { display: none; }
+        .text-area { width: 100%; height: 100px; margin: 10px 0; padding: 10px; }
+        #chatContainer { display: flex; flex-direction: column; width: 300px; }
+        #messages { height: 200px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+        #inputField { padding: 10px; margin-bottom: 10px; }
+    </style>
 </head>
-<body id="bdy">
+<body>
+    <div class="container" id="initiate-section">
+        <button id="hostButton" class="button">Host</button>
+        <button id="joinButton" class="button">Join</button>
 
-  <canvas id="canvas" style="object-fit: contain; width: 100vw; height: 100vh;"></canvas>
+        <div id="offerSection" class="hidden">
+            <textarea id="offerText" class="text-area" readonly></textarea>
+            <button id="copyOfferButton" class="button">Copy Offer</button>
+        </div>
 
-  <script>
-/*Release canvas from memory*/
-function releaseCanvas(canvas) {
-canvas.width = 1;
-canvas.style.width = "1vw";
-canvas.height = 1;
-canvas.style.height = "1vh";
-const ctx = canvas.getContext('2d');
-ctx && ctx.clearRect(0, 0, 1, 1);
-canvas.remove();
-}
+        <div id="joinSection" class="hidden">
+            <textarea id="joinOfferText" class="text-area" placeholder="Paste the offer here"></textarea>
+            <button id="pasteOfferButton" class="button">Paste Offer</button>
+            <button id="submitOfferButton" class="button">Join Chat</button>
+        </div>
+    </div>
 
-//initialize canvas
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-// Set canvas dimensions
-canvas.width = 3840;
-canvas.height = 2160;
+    <div id="chatContainer" class="hidden">
+        <div id="messages"></div>
+        <input type="text" id="inputField" placeholder="Type a message..." />
+        <button id="sendButton" class="button">Send</button>
+    </div>
 
-ctx.fillStyle = 'black';
-ctx.fillRect(0, 0, canvas.width, canvas.height);
+    <script>
+        const hostButton = document.getElementById('hostButton');
+        const joinButton = document.getElementById('joinButton');
+        const offerSection = document.getElementById('offerSection');
+        const offerText = document.getElementById('offerText');
+        const copyOfferButton = document.getElementById('copyOfferButton');
+        const joinSection = document.getElementById('joinSection');
+        const joinOfferText = document.getElementById('joinOfferText');
+        const pasteOfferButton = document.getElementById('pasteOfferButton');
+        const submitOfferButton = document.getElementById('submitOfferButton');
+        const chatContainer = document.getElementById('chatContainer');
+        const messagesDiv = document.getElementById('messages');
+        const inputField = document.getElementById('inputField');
+        const sendButton = document.getElementById('sendButton');
 
-//variables
-let startTime = Date.now();
-let fadeToColor = false;
-let fading = false;
-const text = "ADA whale";
-const fontSize = 640;
-const cubeSize = 20;
-const cubes = [];
-let colorChangeSpeed;
-let isAndroid = /Android/i.test(navigator.userAgent);
-let isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-let colors = [];
-let snake = [];
+        let localConnection;
+        let dataChannel;
+        let isHost = false;
 
-//Set speed for devices
-if (isAndroid) {
-    // Adjust color change speed for Android
-    colorChangeSpeed = 0.0001; // speed in milliseconds
-} else if (isIOS) {
-    // Adjust color change speed for iOS
-    colorChangeSpeed = 35; // speed in milliseconds
-} else {
-    // Default color change speed
-    colorChangeSpeed = 0.0001; // speed in milliseconds
-}
+        const iceServers = {
+            iceServers: [
+                { urls: 'stun:iphone-stun.strato-iphone.de:3478' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' },
+                { urls: 'stun:stun3.l.google.com:19302' },
+                { urls: 'stun:stun4.l.google.com:19302' }
+            ]
+        };
 
-//Cube set up
-class Cube {
-    constructor(x, y, targetX, targetY, maxHoverOffset) {
-        this.x = x;
-        this.y = y;
-        this.targetX = targetX;
-        this.targetY = targetY;
-        this.colorIndex = 0; // Start with the initial color
-        this.size = cubeSize;
-        this.neighbors = [];
-        this.visited = false; // Track if the cube has been visited
-        this.hoverOffsetX = (Math.random() - 0.5) * maxHoverOffset;
-        this.hoverOffsetY = (Math.random() - 0.5) * maxHoverOffset;
-        this.maxHoverOffset = maxHoverOffset; // Initial max hover offset
-    }
+        const setupConnection = async (isHost) => {
+            localConnection = new RTCPeerConnection(iceServers);
 
-    draw() {
-        ctx.fillStyle = colors[this.colorIndex];
-        ctx.fillRect(this.x, this.y, this.size, this.size);
-        ctx.fillStyle = 'rgba(0,0,0,.6)';
-        ctx.fillRect(this.x + this.size * 0.1, this.y + this.size * 0.1, this.size, this.size);
-    }
+            localConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    console.log('ICE Candidate:', JSON.stringify(event.candidate));
+                } else {
+                    console.log('All ICE candidates have been sent');
+                    if (localConnection.localDescription) {
+                        offerText.value = JSON.stringify(localConnection.localDescription);
+                        offerSection.classList.remove('hidden');
+                    }
+                }
+            };
 
-    update() {
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;        
-        const speed = isIOS ? .075 : .045; // Adjust this value to change the speed of cube movement
-        const hoverDistance = 5; // Distance to hover around the target position
+            localConnection.onconnectionstatechange = () => {
+                console.log('Connection State:', localConnection.connectionState);
+                if (localConnection.connectionState === 'connected') {
+                    console.log('WebRTC connection established.');
+                    switchToChat();
+                } else if (localConnection.connectionState === 'failed' || localConnection.connectionState === 'disconnected') {
+                    console.log('WebRTC connection failed or disconnected. State:', localConnection.connectionState);
+                }
+            };
 
-        // Apply random hover offset
-        if (Math.random() < 0.1) { // Update hover offset randomly
-            this.hoverOffsetX = (Math.random() - 0.5) * this.maxHoverOffset;
-            this.hoverOffsetY = (Math.random() - 0.5) * this.maxHoverOffset;
-        }
+            localConnection.ondatachannel = (event) => {
+                dataChannel = event.channel;
+                dataChannel.onopen = () => {
+                    console.log('Remote data channel opened');
+                    switchToChat();
+                };
+                dataChannel.onmessage = (event) => handleMessage(event.data);
+            };
 
-        const targetX = this.targetX + this.hoverOffsetX;
-        const targetY = this.targetY + this.hoverOffsetY;
-        const deltaX = targetX - this.x;
-        const deltaY = targetY - this.y;
-        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            if (isHost) {
+                dataChannel = localConnection.createDataChannel('chat');
+                dataChannel.onopen = () => {
+                    console.log('Local data channel opened');
+                    switchToChat();
+                };
+                dataChannel.onmessage = (event) => handleMessage(event.data);
 
-        if (distance > hoverDistance) {
-            this.x += (deltaX / distance) * speed * distance;
-            this.y += (deltaY / distance) * speed * distance;
-        }
-    }
+                const offer = await localConnection.createOffer();
+                await localConnection.setLocalDescription(offer);
+                console.log('Created Offer', offer);
+            }
+        };
 
-    changeColor() {
-        this.colorIndex = (this.colorIndex + 1) % colors.length;
-    }
+        const handleOffer = async (offer) => {
+            try {
+                const parsedOffer = JSON.parse(offer);
+                console.log('Parsed Offer:', parsedOffer);
+                await setupConnection(false);
+                await localConnection.setRemoteDescription(new RTCSessionDescription(parsedOffer));
 
-    fadeToSingleColor(targetColorIndex, alpha) {
-        const currentRGB = colors[this.colorIndex].match(/\d+/g).map(Number);
-        const targetRGB = colors[targetColorIndex].match(/\d+/g).map(Number);
+                const answer = await localConnection.createAnswer();
+                await localConnection.setLocalDescription(answer);
+                console.log('Created Answer', answer);
 
-        const newRGB = currentRGB.map((c, i) => {
-            return Math.floor(c + (targetRGB[i] - c) * alpha);
+                // Wait for ICE candidate gathering to complete
+                await new Promise(resolve => {
+                    localConnection.onicegatheringstatechange = () => {
+                        if (localConnection.iceGatheringState === 'complete') {
+                            resolve();
+                        }
+                    };
+                });
+
+                switchToChat();
+            } catch (err) {
+                alert('Error Handling Offer: ' + err);
+                console.error(err);
+            }
+        };
+
+        const switchToChat = () => {
+            document.getElementById('initiate-section').classList.add('hidden');
+            chatContainer.classList.remove('hidden');
+        };
+
+        const handleMessage = (data) => {
+            const messageElement = document.createElement('div');
+            messageElement.textContent = data;
+            messagesDiv.appendChild(messageElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        };
+
+        hostButton.addEventListener('click', async () => {
+            isHost = true;
+            await setupConnection(true);
         });
 
-        this.colorIndex = colors.findIndex(
-            color =>
-                color === `rgb(${newRGB[0]}, ${newRGB[1]}, ${newRGB[2]})`
-        );
+        joinButton.addEventListener('click', () => {
+            joinSection.classList.remove('hidden');
+        });
 
-        if (this.colorIndex === -1) {
-            colors.push(`rgb(${newRGB[0]}, ${newRGB[1]}, ${newRGB[2]})`);
-            this.colorIndex = colors.length - 1;
-        }
-    }
-}
+        copyOfferButton.addEventListener('click', () => {
+            offerText.select();
+            document.execCommand('copy');
+            alert('Offer copied to clipboard');
+        });
 
-function initCubes() {
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-
-    ctx.font = `${fontSize}px Arial`;
-    const textWidth = ctx.measureText(text).width;
-    const textHeight = fontSize; // Since we're using a fixed font size
-
-    // Calculate the position to start drawing the text so that it is centered
-    const startX = (canvas.width - textWidth) / 2;
-    const startY = (canvas.height + textHeight) / 2.2;
-
-    let isAndroid = /Android/i.test(navigator.userAgent);
-    let isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-    // Draw the text multiple times with slight offsets to create a thicker appearance
-    const offsets = [
-        { x: 0, y: 0 },
-        { x: 15, y: 0 },
-        { x: -15, y: 0 },
-        { x: 0, y: 15 },
-        { x: 0, y: -15 },
-        { x: 7.5, y: 7.5 },
-        { x: -7.5, y: -7.5 },
-        { x: 7.5, y: -7.5 },
-        { x: -7.5, y: 7.5 },
-    ];
-
-    // Cycle through the colors array to draw the text with different colors
-    const mainTextColorIndex = colors.length - 1; // Last color is the main text color
-    offsets.forEach((offset, index) => {
-        ctx.fillStyle = colors[mainTextColorIndex];
-        ctx.fillText(text, startX + offset.x, startY + offset.y);
-    });
-
-    const textData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-
-    // Initialize cubes around the text
-    for (let y = 0; y < canvas.height; y += cubeSize) {
-        for (let x = 0; x < canvas.width; x += cubeSize) {
-            const index = (y * canvas.width + x) * 4;
-            if (textData[index + 3] > 128) {
-    let maxHoverOffset;
-    if (isAndroid) {
-        // Adjust maxHoverOffset based on fade progress for Android
-        maxHoverOffset = 3000;
-    } else if (isIOS) {
-        // Adjust maxHoverOffset based on fade progress for iOS
-        maxHoverOffset = 2000;
-    } else {
-        // Default maxHoverOffset value
-        maxHoverOffset = 3000;
-    }
-
-    const cube = new Cube(
-        x,
-        y,
-        x,
-        y,
-        maxHoverOffset
-    );
-
-    cubes.push(cube);
-}
-
-        }
-    }
-
-    // Find neighbors
-    for (let i = 0; i < cubes.length; i++) {
-        const cube = cubes[i];
-        cube.neighbors = cubes.filter(other =>
-            other !== cube &&
-            Math.abs(other.targetX - cube.targetX) <= cubeSize &&
-            Math.abs(other.targetY - cube.targetY) <= cubeSize
-        );
-    }
-}
-
-function animate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-
-    for (const cube of cubes) {
-        cube.update();
-        cube.draw();
-    }
-}
-
-
-// Add a variable to store the last used color
-let lastColorIndex = -1;
-
-// Modify the waveColorChange function to avoid back-to-back same color
-function waveColorChange() {
-    const snakeSize = 20; // Number of cubes in the snake
-
-    if (!fading) {
-        if (snake.length === 0) {
-            // Initialize the snake with a random starting point around a random cube
-            const randomCube = cubes[Math.floor(Math.random() * cubes.length)];
-            snake.push(randomCube);
-            randomCube.visited = true; // Mark the starting cube as visited
-        }
-
-        // Move each cube in the snake randomly to a neighboring cube
-        for (let i = 0; i < snake.length; i++) {
-            const cube = snake[i];
-            cube.changeColor();
-
-            // Select a random neighboring cube
-            const neighbors = cube.neighbors.filter(neighbor => !neighbor.visited);
-            if (neighbors.length > 0) {
-                const nextCube = neighbors[Math.floor(Math.random() * neighbors.length)];
-                snake[i] = nextCube;
-                nextCube.visited = true; // Mark the cube as visited
-            } else {
-                // No unvisited neighbors, backtrack to a previous cube
-                snake.splice(i, 1);
-                i--; // Correct index due to removal
+        pasteOfferButton.addEventListener('click', async () => {
+            try {
+                const text = await navigator.clipboard.readText();
+                joinOfferText.value = text;
+            } catch (err) {
+                alert('Clipboard Read Error: ' + err);
+                console.error(err);
             }
-        }
+        });
 
-        // Ensure the snake retains its length
-        while (snake.length < snakeSize) {
-            const lastCube = snake[snake.length - 1];
-            let nextCube;
+        submitOfferButton.addEventListener('click', async () => {
+            const offer = joinOfferText.value.trim();
+            await handleOffer(offer);
+        });
 
-            // Look for neighboring cubes within a certain distance
-            const potentialNeighbors = lastCube.neighbors.filter(cube => !cube.visited);
+        sendButton.addEventListener('click', () => {
+            if (inputField.value.trim() && dataChannel && dataChannel.readyState === 'open') {
+                const message = inputField.value.trim();
+                dataChannel.send(message);
+                inputField.value = '';
 
-            if (potentialNeighbors.length > 0) {
-                // If there are potential neighbors, randomly select one
-                nextCube = potentialNeighbors[Math.floor(Math.random() * potentialNeighbors.length)];
+                const messageElement = document.createElement('div');
+                messageElement.textContent = message;
+                messagesDiv.appendChild(messageElement);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
             } else {
-                // If no available neighbor within close proximity, randomly select any neighbor
-                nextCube = lastCube.neighbors[Math.floor(Math.random() * lastCube.neighbors.length)];
+                console.log('Data Channel Not Open or Empty Message');
             }
+        });
 
-            if (nextCube) {
-                snake.push(nextCube);
-                nextCube.visited = true;
-            } else {
-                // If no nextCube found, break out to prevent infinite loop
-                break;
+        inputField.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendButton.click();
             }
-        }
-
-        // If the snake fails to move, reset it
-        if (snake.length === 0) {
-            const randomCube = cubes[Math.floor(Math.random() * cubes.length)];
-            snake.push(randomCube);
-            randomCube.visited = true;
-        }
-    }
-
-    // Check if 15 seconds have passed
-    if (Date.now() - startTime >= 12000) {
-        if (!fading) {
-            fadeToColor = true;
-            fadeStartTime = Date.now();
-            resetCanvas();
-
-            // Ensure the next color is different from the last used color
-            do {
-                nextColor = Math.floor(Math.random() * (colors.length - 1)); // Exclude the last color (black)
-            } while (nextColor === lastColorIndex);
-
-            lastColorIndex = nextColor; // Update the last used color
-
-            fading = true;
-            // Clear snake and reset visited status of all cubes
-            snake = [];
-            cubes.forEach(cube => {
-                cube.visited = false;
-                cube.colorIndex = nextColor; // Apply the new color
-            });
-        }
-    }
-
-    // If fading to single color
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-
-// If fading to single color
-if (fadeToColor) {
-    const fadeDuration = isIOS ? 600 : 500;
-    const elapsedTime = Date.now() - fadeStartTime;
-    const alpha = Math.min(elapsedTime / fadeDuration, 1);
-
-
-        for (const cube of cubes) {
-            cube.fadeToSingleColor(nextColor, alpha);
-
-            let isAndroid = /Android/i.test(navigator.userAgent);
-            let isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-            if (isAndroid) {
-                // Adjust maxHoverOffset based on fade progress for Android
-                cube.maxHoverOffset = 3000 - (2980 * alpha);
-            } else if (isIOS) {
-                // Adjust maxHoverOffset based on fade progress for iOS
-                cube.maxHoverOffset = 2000 - (1980 * alpha);
-            } else {
-                // Default adjustment if neither Android nor iOS
-                cube.maxHoverOffset = 3000 - (2980 * alpha);
-            }
-        }
-
-        if (elapsedTime >= fadeDuration) {
-            fadeToColor = false;
-            fading = false;
-            startTime = Date.now(); // Restart the snake process
-        }
-    }
-
-    // When the explosion ends, spread out all cubes evenly
-    if (!fading && Date.now() - startTime >= 12000) {
-        const maxRadius = Math.min(canvas.width, canvas.height) / 2; // Max distance from center
-        const center = { x: canvas.width / 2, y: canvas.height / 2 };
-
-        // Move each cube away from the center
-        for (const cube of cubes) {
-            const deltaX = cube.x - center.x;
-            const deltaY = cube.y - center.y;
-            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-            const angle = Math.atan2(deltaY, deltaX);
-
-            const targetX = center.x + Math.cos(angle) * maxRadius;
-            const targetY = center.y + Math.sin(angle) * maxRadius;
-
-            // Smoothly move cubes to their target positions
-            cube.targetX = targetX;
-            cube.targetY = targetY;
-            cube.colorIndex = Math.floor(Math.random() * (colors.length - 1)); // Random color index (excluding black)
-        }
-    }
-}
-
-
-// Clear the canvas with a black background
-ctx.fillStyle = 'black';
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-// Call initCubes() to initialize cubes
-initCubes();
-
-// Now, you can gradually reduce the maxHoverOffset over time
-function updateCubes() {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const fadeDuration = isIOS ? 600 : 500;
-    const elapsedTime = Date.now() - startTime;
-    const alpha = Math.min(elapsedTime / fadeDuration, 1);
-
-    for (const cube of cubes) {
-
-      let isAndroid = /Android/i.test(navigator.userAgent);
-      let isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-      if (isAndroid) {
-      // Adjust maxHoverOffset based on fade progress for Android
-      cube.maxHoverOffset = 3000 - (2980 * alpha);
-  } else if (isIOS) {
-      // Adjust maxHoverOffset based on fade progress for iOS
-      cube.maxHoverOffset = 2000 - (1980 * alpha);
-  } else {
-      // Default adjustment if neither Android nor iOS
-      cube.maxHoverOffset = 3000 - (2980 * alpha);
-  }
-    }
-
-    // Call updateCubes repeatedly until the fading is complete
-    if (elapsedTime < fadeDuration) {
-        requestAnimationFrame(updateCubes);
-    }
-}
-
-// Call updateCubes() after initialization to gradually reduce maxHoverOffset
-updateCubes();
-
-// Function to animate cubes
-function animate() {
-    for (const cube of cubes) {
-        cube.update();
-        cube.draw();
-    }
-    animationId = requestAnimationFrame(animate);
-}
-
-// Start animation
-initCanvas();
-animate();
-
-
-// First update: Remove color restrictions with dark colors and exclude colors
-function getRandomColor() {
-    return `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`;
-}
-
-function assignRandomColors() {
-    colors = [];
-    const mainTextColor = `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`;
-    for (let i = 0; i < 5; i++) {
-        colors.push(getRandomColor());
-    }
-    colors.push(mainTextColor); // Ensuring the main text color is part of the colors array
-}
-
-
-// Call waveColorChange function at an interval
-setInterval(waveColorChange, colorChangeSpeed);
-
-
-// Assign random colors and initialize cubes
-assignRandomColors();
-initCubes();
-animationId = requestAnimationFrame(animate);
-
-
-
-let singleClickTimer;
-
-// Function to generate a unique identifier (UUID)
-function generateUniqueId() {
-    return 'xxx-xx-4-yxx-xx'.replace(/[xy]/g, function(c) {
-        var r = Math.random() * 16 | 0,
-            v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-}
-
-// Attach event listeners to the canvas
-//function attachCanvasEventListeners() {
-    //const canvas = document.getElementById("canvas");
- 
-
-    bdy.addEventListener('click', event => {
-        if (event.detail === 1) {
-            singleClickTimer = setTimeout(() => {
-                location.reload();
-            }, 200);
-        }
-    });
-
-    bdy.addEventListener('dblclick', event => {
-        clearTimeout(singleClickTimer); // Clear the single-click timer
-        //event.preventDefault(); // Prevent default action for the event
-        let link = document.createElement('a');
-        let uniqueId = generateUniqueId();
-        link.download = `image_${uniqueId}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-    });
-//}
-
-// Initialize the canvas and attach event listeners once
-function initCanvas() {
-    ctx.fillStyle = 'black';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-}
-
-// Function to clear and reset the canvas with a black background
-function resetCanvas() {
-    ctx.fillStyle = 'black';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    // Reinitialize cubes
-    //initCubes();
-}
-
-// Call initCanvas initially to set up the canvas
-
-
-
-// Attach event listeners once after the initial setup
-//attachCanvasEventListeners();
-initCanvas()
-
-
-
-/*Run release even when they refresh not with click (F5, refresh button, closing page)*/
-      window.addEventListener('pagehide', (event) => {
-      /*Release every canvas*/
-      var canvases = document.getElementsByTagName("canvas");
-      var canvasesList = Array.prototype.slice.call(canvases);
-            canvasesList.forEach(releaseCanvas);
-      });
-
-</script>
+        });
+    </script>
 </body>
 </html>
