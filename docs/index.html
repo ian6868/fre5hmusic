@@ -1,17 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <title>WebRTC Chat App</title>
+    <title>BlockChat</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; }
-        .container { margin-top: 20px; }
-        .button { padding: 10px 20px; margin: 10px; cursor: pointer; }
-        .hidden { display: none; }
-        .text-area { width: 100%; height: 100px; margin: 10px 0; padding: 10px; }
-        #chatContainer { display: flex; flex-direction: column; width: 300px; }
-        #messages { height: 200px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
-        #inputField { padding: 10px; margin-bottom: 10px; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+        }
+        .container {
+            margin-top: 20px;
+        }
+        .button {
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .hidden {
+            display: none;
+        }
+        .text-area {
+            width: 100%;
+            height: 100px;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+        #chatContainer {
+            flex-direction: column;
+            width: 90%;
+            max-width: 400px;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+        }
+        #messages {
+            height: 200px;
+            overflow-y: scroll;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+            background-color: #fafafa;
+            border-radius: 10px 10px 0 0;
+        }
+        #inputField {
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            width: calc(100% - 20px);
+        }
+        .message {
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 75%;
+        }
+        .message.user1 {
+            background-color: #d1e7dd; /* Light green */
+            margin-left: auto;
+            border: 2px solid #198754;
+        }
+        .message.user2 {
+            background-color: #f8d7da; /* Light red */
+            margin-right: auto;
+            border: 2px solid #dc3545;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.9);
+            padding-top: 60px;
+        }
+        .modal-content {
+            margin: auto;
+            padding: 20px;
+            background-color: white;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+            color: black;
+            border-radius: 10px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -22,12 +127,17 @@
         <div id="offerSection" class="hidden">
             <textarea id="offerText" class="text-area" readonly></textarea>
             <button id="copyOfferButton" class="button">Copy Offer</button>
+            <textarea id="answerInputText" class="text-area hidden" placeholder="Paste the answer here"></textarea>
+            <button id="pasteAnswerButton" class="button hidden">Paste Answer</button>
+            <button id="submitAnswerButton" class="button hidden">Submit Answer</button>
         </div>
 
         <div id="joinSection" class="hidden">
             <textarea id="joinOfferText" class="text-area" placeholder="Paste the offer here"></textarea>
             <button id="pasteOfferButton" class="button">Paste Offer</button>
-            <button id="submitOfferButton" class="button">Join Chat</button>
+            <button id="submitOfferButton" class="button">Generate Answer</button>
+            <textarea id="answerOutputText" class="text-area hidden" readonly></textarea>
+            <button id="copyAnswerButton" class="button hidden">Copy Answer</button>
         </div>
     </div>
 
@@ -37,28 +147,47 @@
         <button id="sendButton" class="button">Send</button>
     </div>
 
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p id="modalMessage">Clipboard read is not supported in this environment. Please manually paste the text.</p>
+        </div>
+    </div>
+
     <script>
         const hostButton = document.getElementById('hostButton');
         const joinButton = document.getElementById('joinButton');
         const offerSection = document.getElementById('offerSection');
         const offerText = document.getElementById('offerText');
         const copyOfferButton = document.getElementById('copyOfferButton');
+        const answerInputText = document.getElementById('answerInputText');
+        const pasteAnswerButton = document.getElementById('pasteAnswerButton');
+        const submitAnswerButton = document.getElementById('submitAnswerButton');
         const joinSection = document.getElementById('joinSection');
         const joinOfferText = document.getElementById('joinOfferText');
         const pasteOfferButton = document.getElementById('pasteOfferButton');
         const submitOfferButton = document.getElementById('submitOfferButton');
+        const answerOutputText = document.getElementById('answerOutputText');
+        const copyAnswerButton = document.getElementById('copyAnswerButton');
         const chatContainer = document.getElementById('chatContainer');
         const messagesDiv = document.getElementById('messages');
         const inputField = document.getElementById('inputField');
         const sendButton = document.getElementById('sendButton');
+        const modal = document.getElementById("myModal");
+        const modalClose = document.getElementsByClassName("close")[0];
 
         let localConnection;
+        let remoteConnection;
         let dataChannel;
-        let isHost = false;
+        let iceCandidates = [];
+        let candidateGatheringComplete = false;
+        let offerCreated = false;
+        let answerCreated = false;
 
         const iceServers = {
             iceServers: [
                 { urls: 'stun:iphone-stun.strato-iphone.de:3478' },
+                { urls: 'stun:invalid.stun.server:19302' },  // Example invalid STUN server
                 { urls: 'stun:stun1.l.google.com:19302' },
                 { urls: 'stun:stun2.l.google.com:19302' },
                 { urls: 'stun:stun3.l.google.com:19302' },
@@ -66,97 +195,141 @@
             ]
         };
 
-        const setupConnection = async (isHost) => {
+        const setupHostConnection = async () => {
+            if (localConnection) {
+                localConnection.close();
+            }
             localConnection = new RTCPeerConnection(iceServers);
-
-            localConnection.onicecandidate = (event) => {
+            localConnection.onicecandidate = event => {
                 if (event.candidate) {
-                    console.log('ICE Candidate:', JSON.stringify(event.candidate));
+                    iceCandidates.push(event.candidate);
                 } else {
-                    console.log('All ICE candidates have been sent');
-                    if (localConnection.localDescription) {
-                        offerText.value = JSON.stringify(localConnection.localDescription);
-                        offerSection.classList.remove('hidden');
-                    }
+                    candidateGatheringComplete = true;
+                    console.log('ICE Candidate gathering complete.');
                 }
             };
 
-            localConnection.onconnectionstatechange = () => {
-                console.log('Connection State:', localConnection.connectionState);
-                if (localConnection.connectionState === 'connected') {
-                    console.log('WebRTC connection established.');
-                    switchToChat();
-                } else if (localConnection.connectionState === 'failed' || localConnection.connectionState === 'disconnected') {
-                    console.log('WebRTC connection failed or disconnected. State:', localConnection.connectionState);
+            dataChannel = localConnection.createDataChannel('chat');
+            dataChannel.onopen = handleDataChannelOpen;
+            dataChannel.onmessage = event => handleMessage(event.data);
+
+            const offer = await localConnection.createOffer();
+            await localConnection.setLocalDescription(offer);
+
+            await waitForIceGathering(localConnection);
+            offerText.value = JSON.stringify(localConnection.localDescription);
+            offerSection.classList.remove('hidden');
+            answerInputText.classList.remove('hidden');
+            pasteAnswerButton.classList.remove('hidden');
+            submitAnswerButton.classList.remove('hidden');
+            offerCreated = true;
+        };
+
+        const handleJoin = async offer => {
+            if (answerCreated) {
+                console.log('Answer already created. Skipping new creation.');
+                return;
+            }
+            answerCreated = true;
+
+            remoteConnection = new RTCPeerConnection(iceServers);
+            remoteConnection.onicecandidate = event => {
+                if (event.candidate) {
+                    iceCandidates.push(event.candidate);
+                } else {
+                    candidateGatheringComplete = true;
+                    console.log('ICE Candidate gathering complete.');
                 }
             };
 
-            localConnection.ondatachannel = (event) => {
+            remoteConnection.ondatachannel = event => {
                 dataChannel = event.channel;
-                dataChannel.onopen = () => {
-                    console.log('Remote data channel opened');
-                    switchToChat();
-                };
-                dataChannel.onmessage = (event) => handleMessage(event.data);
+                dataChannel.onopen = handleDataChannelOpen;
+                dataChannel.onmessage = event => handleMessage(event.data);
             };
 
-            if (isHost) {
-                dataChannel = localConnection.createDataChannel('chat');
-                dataChannel.onopen = () => {
-                    console.log('Local data channel opened');
-                    switchToChat();
-                };
-                dataChannel.onmessage = (event) => handleMessage(event.data);
+            await remoteConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(offer)));
+            const answer = await remoteConnection.createAnswer();
+            await remoteConnection.setLocalDescription(answer);
 
-                const offer = await localConnection.createOffer();
-                await localConnection.setLocalDescription(offer);
-                console.log('Created Offer', offer);
+            await waitForIceGathering(remoteConnection);
+
+            if (remoteConnection.localDescription) {
+                let validCandidateFound = false;
+                iceCandidates.forEach(candidate => {
+                    if (candidate.candidate.includes('typ host') && !candidate.candidate.includes('0.0.0.0')) {
+                        validCandidateFound = true;
+                    }
+                });
+
+                if (!validCandidateFound) {
+                    console.log('No valid candidates found in the answer.');
+                    remoteConnection.close();
+                    answerCreated = false; // Reset the flag to allow retry
+                    return;
+                }
+
+                answerOutputText.value = JSON.stringify(remoteConnection.localDescription);
+                answerOutputText.classList.remove('hidden');
+                copyAnswerButton.classList.remove('hidden');
             }
         };
 
-        const handleOffer = async (offer) => {
+        const handleAnswer = async answer => {
             try {
-                const parsedOffer = JSON.parse(offer);
-                console.log('Parsed Offer:', parsedOffer);
-                await setupConnection(false);
-                await localConnection.setRemoteDescription(new RTCSessionDescription(parsedOffer));
+                const parsedAnswer = JSON.parse(answer);
+                await localConnection.setRemoteDescription(new RTCSessionDescription(parsedAnswer));
+                console.log('Remote description set with the answer:', parsedAnswer);
+            } catch (error) {
+                console.error('Error setting remote description:', error);
+            }
+            checkConnectionState();
+        };
 
-                const answer = await localConnection.createAnswer();
-                await localConnection.setLocalDescription(answer);
-                console.log('Created Answer', answer);
-
-                // Wait for ICE candidate gathering to complete
-                await new Promise(resolve => {
-                    localConnection.onicegatheringstatechange = () => {
-                        if (localConnection.iceGatheringState === 'complete') {
+        const waitForIceGathering = connection => {
+            return new Promise(resolve => {
+                if (connection.iceGatheringState === 'complete') {
+                    resolve();
+                } else {
+                    const checkState = () => {
+                        if (connection.iceGatheringState === 'complete') {
+                            connection.removeEventListener('icegatheringstatechange', checkState);
                             resolve();
                         }
                     };
-                });
+                    connection.addEventListener('icegatheringstatechange', checkState);
+                }
+            });
+        };
 
+        const handleDataChannelOpen = () => {
+            console.log('Data channel is open');
+            switchToChat();
+        };
+
+        const checkConnectionState = () => {
+            if (localConnection.iceConnectionState === 'connected' && (!remoteConnection || remoteConnection.iceConnectionState === 'connected')) {
                 switchToChat();
-            } catch (err) {
-                alert('Error Handling Offer: ' + err);
-                console.error(err);
             }
         };
 
         const switchToChat = () => {
+            console.log('Switching to chat view');
             document.getElementById('initiate-section').classList.add('hidden');
             chatContainer.classList.remove('hidden');
         };
 
-        const handleMessage = (data) => {
+        const handleMessage = data => {
+            console.log('Received message:', data);
             const messageElement = document.createElement('div');
             messageElement.textContent = data;
+            messageElement.className = 'message ' + (isUser1 ? 'user1' : 'user2');
+            isUser1 = !isUser1;
             messagesDiv.appendChild(messageElement);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         };
 
-        hostButton.addEventListener('click', async () => {
-            isHost = true;
-            await setupConnection(true);
-        });
+        hostButton.addEventListener('click', setupHostConnection);
 
         joinButton.addEventListener('click', () => {
             joinSection.classList.remove('hidden');
@@ -165,7 +338,6 @@
         copyOfferButton.addEventListener('click', () => {
             offerText.select();
             document.execCommand('copy');
-            alert('Offer copied to clipboard');
         });
 
         pasteOfferButton.addEventListener('click', async () => {
@@ -173,14 +345,32 @@
                 const text = await navigator.clipboard.readText();
                 joinOfferText.value = text;
             } catch (err) {
-                alert('Clipboard Read Error: ' + err);
-                console.error(err);
+                console.error('Clipboard read error:', err);
+                showModal('Clipboard read is not supported in this environment. Please manually paste the text.');
             }
         });
 
         submitOfferButton.addEventListener('click', async () => {
-            const offer = joinOfferText.value.trim();
-            await handleOffer(offer);
+            await handleJoin(joinOfferText.value.trim());
+        });
+
+        copyAnswerButton.addEventListener('click', () => {
+            answerOutputText.select();
+            document.execCommand('copy');
+        });
+
+        pasteAnswerButton.addEventListener('click', async () => {
+            try {
+                const text = await navigator.clipboard.readText();
+                answerInputText.value = text;
+            } catch (err) {
+                console.error('Clipboard read error:', err);
+                showModal('Clipboard read is not supported in this environment. Please manually paste the text.');
+            }
+        });
+
+        submitAnswerButton.addEventListener('click', async () => {
+            await handleAnswer(answerInputText.value.trim());
         });
 
         sendButton.addEventListener('click', () => {
@@ -188,9 +378,10 @@
                 const message = inputField.value.trim();
                 dataChannel.send(message);
                 inputField.value = '';
-
                 const messageElement = document.createElement('div');
                 messageElement.textContent = message;
+                messageElement.className = 'message ' + (isUser1 ? 'user1' : 'user2');
+                isUser1 = !isUser1;
                 messagesDiv.appendChild(messageElement);
                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
             } else {
@@ -198,11 +389,28 @@
             }
         });
 
-        inputField.addEventListener('keypress', (e) => {
+        inputField.addEventListener('keypress', e => {
             if (e.key === 'Enter') {
                 sendButton.click();
             }
         });
+
+        function showModal(message) {
+            document.getElementById("modalMessage").innerText = message;
+            modal.style.display = "block";
+        }
+
+        modalClose.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        let isUser1 = true;
     </script>
 </body>
 </html>
