@@ -3,93 +3,278 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cardano Asset Minting</title>
-
+    <title>American Flag with Sparkler Dots</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
 </head>
 <body>
-    <div id="app">
-        <h1>Mint Assets on Cardano</h1>
-        <form id="mintForm">
-            <label for="networkToggle">Network:</label>
-            <select id="networkToggle" name="networkToggle">
-                <option value="mainnet">Mainnet</option>
-                <option value="testnet">Testnet</option>
-            </select><br><br>
-
-            <label for="assetName">Asset Name:</label>
-            <input type="text" id="assetName" name="assetName" required><br><br>
-
-            <label for="assetAmount">Amount:</label>
-            <input type="number" id="assetAmount" name="assetAmount" required><br><br>
-
-            <label for="policyId">Policy ID:</label>
-            <input type="text" id="policyId" name="policyId" required><br><br>
-
-            <label for="mintScript">Mint Script (JSON):</label>
-            <textarea id="mintScript" name="mintScript" rows="10" cols="50" required></textarea><br><br>
-
-            <button type="submit">Mint Asset</button>
-        </form>
-        <div id="result"></div>
-    </div>
+    <canvas id="canvas"style="object-fit: contain; width: 100vw; height: 100vh"></canvas>
     <script>
-    document.getElementById('mintForm').addEventListener('submit', async function(event) {
-        event.preventDefault();
+    const canvas = document.getElementById('canvas');
+    const gl = canvas.getContext('webgl');
 
-        const assetName = document.getElementById('assetName').value.trim();
-        const assetAmount = parseInt(document.getElementById('assetAmount').value);
-        const policyId = document.getElementById('policyId').value.trim();
-        const mintScript = document.getElementById('mintScript').value.trim();
-        const network = document.getElementById('networkToggle').value;
+    canvas.width = 3840;
+    canvas.height = 2160;
 
-        const API_KEY_MAINNET = 'mainnetFacOFHKb6AQFIygQqyOz9PIhkjzTPHTR';
-        const API_KEY_TESTNET = 'YOUR_BLOCKFROST_API_KEY_TESTNET';
+    // Set up the WebGL viewport to cover the entire canvas
+    gl.viewport(0, 0, canvas.width, canvas.height);
 
-        const API_KEY = network === 'mainnet' ? API_KEY_MAINNET : API_KEY_TESTNET;
-        const endpoint = network === 'mainnet'
-            ? `https://cardano-mainnet.blockfrost.io/api/v0`
-            : `https://cardano-testnet.blockfrost.io/api/v0/assets/mint`;
+    // Basic variables
+    const flagWidth = 3584;
+    const flagHeight = 1620;
+    const unionWidth = 0.76 * flagHeight;
+    const unionHeight = 8.81 * (flagHeight / 13);
+    const dotSpacing = 50; // Spacing between dots in pixels
+    const dotSize = 40; // Adjusted dot size for better visibility on a 4K canvas
+    const sparkleSize = 200; // Further increased size for the sparkles for better visibility
+    const red = [1.0, 0.0, 0.0];
+    const white = [1.0, 1.0, 1.0];
+    const blue = [0.0, 0.0, 1.0];
+    const sparkleSpeed = 2; // Speed of the fuse sparkle animation in seconds
 
-        const headers = {
-            'Content-Type': 'application/json',
-            'project_id': API_KEY
-        };
+    const viewportOffsetX = (canvas.width - flagWidth) / 1.125;
+    const viewportOffsetY = (canvas.height - flagHeight) / 2.125;
 
-        let parsedScript;
-        try {
-            parsedScript = JSON.parse(mintScript);
-        } catch (e) {
-            document.getElementById('result').innerHTML = `<p>Error: Invalid JSON in Mint Script</p>`;
-            return;
+    gl.viewport(viewportOffsetX, viewportOffsetY, flagWidth, flagHeight);
+
+    const numDotsX = Math.floor(flagWidth / dotSpacing);
+    const numDotsY = Math.floor(flagHeight / dotSpacing);
+    const numUnionDotsX = Math.floor(unionWidth / dotSpacing);
+    const numUnionDotsY = Math.floor(unionHeight / dotSpacing);
+
+    const vertexShaderSource = `
+        attribute vec2 a_position;
+        attribute vec3 a_color;
+        varying vec3 v_color;
+        void main() {
+            gl_PointSize = float(${dotSize});
+            gl_Position = vec4(a_position, 0.0, 1.0);
+            v_color = a_color;
         }
+    `;
 
-        const payload = {
-            policy_id: policyId,
-            asset_name: assetName,
-            amount: assetAmount,
-            minting_script: parsedScript
-        };
-
-        try {
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify(payload)
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                document.getElementById('result').innerHTML = `<p>Asset minted successfully: ${result.tx_hash}</p>`;
+    const fragmentShaderSource = `
+        precision highp float;
+        varying highp vec3 v_color;
+        void main() {
+            vec2 coord = gl_PointCoord - vec2(0.5, 0.5);
+            float distance = length(coord);
+            if (distance < 0.5) {
+                vec3 lightDirection = normalize(vec3(0.3, 0.3, 0.7));
+                vec3 normal = normalize(vec3(coord, sqrt(0.25 - distance * distance)));
+                float diffuse = max(dot(normal, lightDirection), 0.0);
+                vec3 viewDirection = normalize(vec3(0.0, 0.0, 1.0));
+                vec3 reflection = reflect(-lightDirection, normal);
+                float specular = pow(max(dot(viewDirection, reflection), 0.0), 16.0);
+                vec3 color = v_color * diffuse + vec3(1.0) * specular;
+                gl_FragColor = vec4(color, 1.0);
             } else {
-                document.getElementById('result').innerHTML = `<p>Error: ${JSON.stringify(result)}</p>`;
+                discard;
             }
-        } catch (error) {
-            document.getElementById('result').innerHTML = `<p>Error: ${error.message}</p>`;
         }
-    });
+    `;
 
+    function createShader(gl, type, source) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            console.error('Shader compile failed with: ' + gl.getShaderInfoLog(shader));
+            gl.deleteShader(shader);
+            return null;
+        }
+        return shader;
+    }
 
-</script>
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+
+    if (vertexShader && fragmentShader) {
+        const program = gl.createProgram();
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
+        gl.linkProgram(program);
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            console.error('Program failed to link: ' + gl.getProgramInfoLog(program));
+        }
+
+        gl.useProgram(program);
+
+        const positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
+        const colorAttributeLocation = gl.getAttribLocation(program, 'a_color');
+
+        const flagPositionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, flagPositionBuffer);
+
+        const positions = [];
+        const colors = [];
+        const dotPositions = [];
+
+        const transparent = [0.0, 0.0, 0.0, 0.0]; // Transparent color
+
+        // Blue dots in the union
+        for (let y = 0; y <= numUnionDotsY; y++) { // Add an extra row
+            for (let x = 0; x < numUnionDotsX; x++) {
+                const posX = -1 + (x * dotSpacing + dotSpacing / 2.1) / (canvas.width / 2.1);
+                const posY = 1 - (y * dotSpacing + dotSpacing / 2.00) / (canvas.height / 2.00);
+                positions.push(posX, posY);
+                if (y < numUnionDotsY) {
+                    colors.push(...blue);
+                } else {
+                    colors.push(...white); // Last row in union is white
+                }
+            }
+        }
+
+        // Red and white stripes with transparent dots behind the union
+        for (let stripe = 0; stripe < 13; stripe++) {
+            const isRedStripe = stripe % 2 === 0;
+            const color = isRedStripe ? red : white;
+            for (let row = 0; row < 3; row++) { // Each stripe has 3 rows of dots
+                for (let x = 0; x < numDotsX; x++) {
+                    const y = stripe * 3 + row; // Calculate the y position for the current row
+                    const posX = -1 + (x * dotSpacing + dotSpacing / 2) / (canvas.width / 2);
+                    const posY = 1 - (y * dotSpacing + dotSpacing / 2) / (canvas.height / 2);
+                    positions.push(posX, posY);
+                    if (x * dotSpacing < unionWidth && y * dotSpacing < unionHeight) {
+                        colors.push(...transparent); // Add transparent dots
+                    } else {
+                        colors.push(...color);
+                    }
+                    dotPositions.push({ x: posX, y: posY });
+                }
+            }
+        }
+
+        // Adjust the order of dots for the spark animation
+        const orderedDotPositions = [];
+        let reverse = false;
+        for (let i = 0; i < dotPositions.length; i += numDotsX) {
+            const row = dotPositions.slice(i, i + numDotsX);
+            if (reverse) {
+                row.reverse();
+            }
+            orderedDotPositions.push(...row);
+            reverse = !reverse;
+        }
+
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+        const flagColorBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, flagColorBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+
+        const particlePositionBuffer = gl.createBuffer();
+        const particleColorBuffer = gl.createBuffer();
+        const particles = [];
+
+        function createParticle(x, y) {
+            const angle = Math.random() * 2 * Math.PI;
+            const speed = Math.random() * 0.0225 + 0.01;
+            const colors = [
+                [1.0, 0.0, 0.0], // Red
+                [1.0, 1.0, 1.0], // White
+                [0.0, 0.0, 1.0]  // Blue
+            ];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            return {
+                x: x,
+                y: y,
+                dx: speed * Math.cos(angle),
+                dy: speed * Math.sin(angle),
+                size: Math.random() * 0.05 + 0.005, // Smaller varied sizes
+                life: 1.0,
+                color: color,
+                brightness: Math.random() * 0.5 + 0.5 // Varied brightness
+            };
+        }
+
+        let sparkInterval;
+
+        canvas.addEventListener('click', () => {
+            clearInterval(sparkInterval);
+            let index = 0;
+            sparkInterval = setInterval(() => {
+                if (index < orderedDotPositions.length) {
+                    for (let i = 0; i < 100; i++) { // Increase number of particles per dot
+                        particles.push(createParticle(orderedDotPositions[index].x, orderedDotPositions[index].y));
+                    }
+                    index++;
+                } else {
+                    clearInterval(sparkInterval);
+                }
+            }, 50); // Adjust the interval to control the speed of the domino effect
+        });
+
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.dx;
+                p.y += p.dy;
+                p.dy -= 0.00095; // Simulate gravity for downward arc
+                p.life -= 0.02;
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        function drawParticles() {
+            const particlePositions = [];
+            const particleColors = [];
+            for (const p of particles) {
+                particlePositions.push(p.x, p.y);
+                particleColors.push(...p.color.map(c => c * p.brightness)); // Apply brightness
+            }
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, particlePositionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(particlePositions), gl.DYNAMIC_DRAW);
+            gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(positionAttributeLocation);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, particleColorBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(particleColors), gl.DYNAMIC_DRAW);
+            gl.vertexAttribPointer(colorAttributeLocation, 3, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(colorAttributeLocation);
+
+            gl.drawArrays(gl.POINTS, 0, particlePositions.length / 2);
+        }
+
+        function render() {
+            gl.clear(gl.COLOR_BUFFER_BIT);
+
+            // Draw the flag
+            gl.bindBuffer(gl.ARRAY_BUFFER, flagPositionBuffer);
+            gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(positionAttributeLocation);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, flagColorBuffer);
+            gl.vertexAttribPointer(colorAttributeLocation, 3, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(colorAttributeLocation);
+
+            gl.drawArrays(gl.POINTS, 0, positions.length / 2);
+
+            // Update and draw particles
+            updateParticles();
+            drawParticles();
+
+            requestAnimationFrame(render);
+        }
+
+        // Clear the canvas with a black color
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        render();
+    } else {
+        console.error('Failed to create shaders.');
+    }
+
+    </script>
 </body>
 </html>
