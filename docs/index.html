@@ -24,15 +24,36 @@
 
     const canvas = document.getElementById("pixelCanvas");
     const ctx = canvas.getContext("2d");
-    canvas.width = 480; // Adjust the width as desired
-    canvas.height = 560; // Adjust the height as desired (280*2 to make the image twice as big)
+    canvas.width = 640; // Width greater than height
+    canvas.height = 480; // Adjust the height as desired
     canvas.style.width = "90vw";
     canvas.style.height = "90vh";
+    // Constants for canvas dimensions
+    const canvasWidth = 640; // Adjust the width as desired
+    const maxCanvasHeight = 480; // Adjust the max height as desired
+    canvas.width = canvasWidth;
+    canvas.height = maxCanvasHeight;
+    // Centering the canvas content
+    ctx.scale(1, 1);
 
+    // Calculate the pixel size to fit the pattern within the canvas height
+    const pixelSize = 8; // Adjusted to fit within the canvas height
+    const rowLength = canvasWidth / pixelSize;
+    const numSpaces = 8; // Variable for the number of spaces at each end
+    const numRows = 47; // Variable for the number of rows
+    const color1 = "#FA239B";
+    const color2 = "#DFC26B";
+    const color3 = "#C0A8C5";
+    const color4 = "#68EB2A";
+    const color5 = "#291893";
+    const color6 = "#7478BC";
+    const color7 = "#D61D07";
+    const color8 = "#ddfe43";
+    const color9 = "#9A4EC0";
     const colors = [
-      ['#FA239B', '#DFC26B', '#C0A8C5'],
-      ['#68EB2A', '#291893', '#7478BC'],
-      ['#D61D07', '#ddfe43', '#9A4EC0']
+      [color1, color2, color3],
+      [color4, color5, color6],
+      [color7, color8, color9]
     ];
 
     // Flatten and choose random colors
@@ -45,31 +66,19 @@
     // Add color 10 to randomly pick from chosenColors
     colorMap[10] = chosenColors[Math.floor(Math.random() * chosenColors.length)];
 
-    const numSpaces = 4; // Variable for the number of spaces at each end
-    const numRows = 63; // Variable for the number of rows
 
-    // Constants for canvas dimensions
-    const canvasWidth = 480; // Adjust the width as desired
-    const maxCanvasHeight = 560; // Adjust the max height as desired
-    canvas.width = canvasWidth;
-    canvas.height = maxCanvasHeight;
-
-    // Calculate the pixel size to fit the pattern within the canvas height
-    const pixelSize = 8; // Adjusted to fit within the canvas height
-    const rowLength = canvasWidth / pixelSize;
-
-    // Centering the canvas content
-    ctx.scale(1, 1);
 
     const rugPattern = generateRugPattern(numSpaces, numRows, rowLength);
 
     function generateRugPattern(numSpaces, numRows, rowLength) {
       const halfPattern = [];
+      const halfNumRows = Math.ceil(numRows / 2);
+      const centerRowIndex = Math.floor(numRows / 2);
 
-      for (let row = 0; row < Math.ceil(numRows / 2); row++) {
+      for (let row = 0; row < halfNumRows; row++) {
         const halfRowPattern = [];
         for (let col = 0; col < rowLength / 2; col++) {
-          if (row === 0 || row === Math.ceil(numRows / 2) - 1) {
+          if (row === 0 || row === halfNumRows - 1) {
             halfRowPattern.push(10); // Solid color for top and bottom rows
           } else if (row % 2 === 0) {
             if (col < numSpaces) {
@@ -89,19 +98,35 @@
         halfPattern.push(fullRowPattern);
       }
 
-      // Add a half-sized row at the bottom for proper vertical mirroring
-      const halfSizedRow = [];
+      // Adjust rows around the center for proper spacing
+      const fullPattern = [];
+      for (let row = 0; row < halfPattern.length - 1; row++) {
+        fullPattern.push(halfPattern[row]);
+      }
+
+      // Add the center row with specific logic for spacing
+      const centerRow = [];
       for (let col = 0; col < rowLength / 2; col++) {
-        if (numSpaces > 0 && (col < numSpaces || col >= rowLength / 2 - numSpaces)) {
-          halfSizedRow.push(9); // Transparent color for the ends of the half row
-        } else {
-          halfSizedRow.push(getRandomInt(5, 5 + chosenColors.length - 1)); // Random pattern for the middle part of the half row
+        if ((numRows - 3) % 4 === 0) { // For odd numbers like 3, 7, 11...
+          if (col < numSpaces) {
+            centerRow.push(9); // Transparent for the ends of the center row
+          } else {
+            centerRow.push(getRandomInt(5, 5 + chosenColors.length - 1)); // Random pattern for the middle part of the center row
+          }
+        } else { // For odd numbers like 5, 9, 13...
+          if (col < numSpaces) {
+            centerRow.push(10); // Solid color for the ends of the center row
+          } else {
+            centerRow.push(getRandomInt(5, 5 + chosenColors.length - 1)); // Random pattern for the middle part of the center row
+          }
         }
       }
-      const fullHalfSizedRow = halfSizedRow.concat(halfSizedRow.slice().reverse());
-      halfPattern.push(fullHalfSizedRow);
+      const fullCenterRow = centerRow.concat(centerRow.slice().reverse());
+      fullPattern.push(fullCenterRow);
 
-      const fullPattern = halfPattern.concat(halfPattern.slice(0, -1).reverse());
+      for (let row = halfPattern.length - 2; row >= 0; row--) {
+        fullPattern.push(halfPattern[row]);
+      }
 
       return fullPattern.flat();
     }
