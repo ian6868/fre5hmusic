@@ -1,46 +1,63 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      background: black;
+      overflow: hidden;
+      background: #000000;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
       margin: 0;
     }
-    canvas {
-      background: black;
+    body, html {
+      margin: 0 !important;
     }
   </style>
 </head>
 <body>
-  <canvas id="pixelCanvas"></canvas>
+  <canvas id="pixelCanvas" style="object-fit: contain;"></canvas>
   <script>
+    /* Release canvas from memory */
+    function releaseCanvas(canvas) {
+      canvas.width = 1;
+      canvas.style.width = "1vw";
+      canvas.height = 1;
+      canvas.style.height = "1vh";
+      const ctx = canvas.getContext('2d');
+      ctx && ctx.clearRect(0, 0, 1, 1);
+      canvas.remove();
+    }
+
     function getRandomInt(min, max) {
       return Math.floor(Math.random() * (max - min + 1) + min);
     }
 
     const canvas = document.getElementById("pixelCanvas");
     const ctx = canvas.getContext("2d");
-    canvas.width = 640; // Width greater than height
+    canvas.width = 768; // Width greater than height
     canvas.height = 480; // Adjust the height as desired
     canvas.style.width = "90vw";
     canvas.style.height = "90vh";
+
     // Constants for canvas dimensions
-    const canvasWidth = 640; // Adjust the width as desired
+    const canvasWidth = 768; // Adjust the width as desired
     const maxCanvasHeight = 480; // Adjust the max height as desired
     canvas.width = canvasWidth;
     canvas.height = maxCanvasHeight;
-    // Centering the canvas content
-    ctx.scale(1, 1);
 
     // Calculate the pixel size to fit the pattern within the canvas height
     const pixelSize = 8; // Adjusted to fit within the canvas height
     const rowLength = canvasWidth / pixelSize;
-    const numSpaces = 8; // Variable for the number of spaces at each end
-    const numRows = 47; // Variable for the number of rows
+    const numSpaces = 10; // Variable for the number of spaces at each end
+    const numRows = 59; // Variable for the number of rows, 59 max
+
+    // Calculate the vertical offset to center the rug pattern vertically
+    const patternHeight = numRows * pixelSize;
+    const verticalOffset = (maxCanvasHeight - patternHeight) / 2;
+
     const color1 = "#FA239B";
     const color2 = "#DFC26B";
     const color3 = "#C0A8C5";
@@ -65,8 +82,6 @@
 
     // Add color 10 to randomly pick from chosenColors
     colorMap[10] = chosenColors[Math.floor(Math.random() * chosenColors.length)];
-
-
 
     const rugPattern = generateRugPattern(numSpaces, numRows, rowLength);
 
@@ -138,7 +153,7 @@
     function drawPixelArtRug() {
       for (let i = 0; i < rugPattern.length; i++) {
         const x = (i % rowLength) * pixelSize;
-        const y = Math.floor(i / rowLength) * pixelSize;
+        const y = Math.floor(i / rowLength) * pixelSize + verticalOffset; // Apply vertical offset
 
         const color = getColorFromCode(rugPattern[i]);
 
@@ -149,8 +164,23 @@
 
     drawPixelArtRug();
 
-    document.querySelector("canvas").addEventListener("click", function () {
-      location.reload();
+    // Single and double click actions
+    let timer;
+    document.querySelector("canvas").addEventListener('click', event => {
+      if (event.detail === 1) {
+        timer = setTimeout(() => {
+          location.reload();
+        }, 200)
+      }
+    });
+
+    // Add double-click event listener to download the canvas as an image
+    document.querySelector("canvas").addEventListener("dblclick", function () {
+      clearTimeout(timer);
+      const link = document.createElement('a');
+      link.download = 'canvas.png';
+      link.href = canvas.toDataURL();
+      link.click();
     });
   </script>
 </body>
